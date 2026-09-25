@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
-<title>자아존중감 응답 도구 — 개선판</title>
+<title>자아존중감 응답 도구 — 출처·엑셀 백업 수정판</title>
 <style>
-:root{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f6f8;line-height:1.6}*{box-sizing:border-box}body{margin:0;padding:16px}main{max-width:1000px;margin:auto}section,.panel{background:white;border:1px solid #cbd5e1;border-radius:8px;padding:20px;margin:12px 0}h1{font-size:24px}h2{font-size:20px}h3{font-size:17px}button,input,select{font:inherit}button{background:#1d4ed8;color:white;border:1px solid #1d4ed8;border-radius:4px;padding:9px 14px;cursor:pointer;margin:4px 4px 4px 0}button.secondary{background:white;color:#172033;border-color:#94a3b8}button.danger{background:#b91c1c;border-color:#b91c1c}button:disabled{opacity:.55;cursor:wait}input:not([type=radio]):not([type=checkbox]),select{padding:8px;border:1px solid #64748b;border-radius:4px;max-width:100%;background:white;color:#172033}input[type=radio],input[type=checkbox]{width:20px;height:20px;vertical-align:middle}label{display:block;margin:6px 0}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.row label{flex:1;min-width:150px}.row input{width:100%}fieldset{border:1px solid #cbd5e1;border-radius:4px;margin:18px 0;padding:12px}legend{font-weight:600;padding:0 5px}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.choices label{border:1px solid #cbd5e1;padding:9px;cursor:pointer;margin:0}.notice{border-left:4px solid #1d4ed8;background:#eff6ff;padding:12px}.warning{border-left:4px solid #b45309;background:#fffbeb;padding:12px}.small{font-size:13px;color:#475569}.hidden,[hidden]{display:none!important}#message{position:sticky;top:0;z-index:2;background:#fff;border:2px solid #b45309;padding:10px;white-space:pre-wrap}#message:empty{display:none}progress{width:100%;height:12px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}th{background:#f1f5f9}td.number{text-align:right}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:6px}#done{text-align:center}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:550px){body{padding:8px}section{padding:12px}.choices{grid-template-columns:1fr}}@media print{body{background:white;padding:0}header,#message,.no-print,section:not(#teacher):not(#detail){display:none!important}section{border:0;padding:0}table{font-size:11px}tr,fieldset{break-inside:avoid}.tablewrap{overflow:visible}button{display:none!important}}
+:root{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f6f8;line-height:1.6}*{box-sizing:border-box}body{margin:0;padding:16px}main{max-width:1000px;margin:auto}section,.panel{background:white;border:1px solid #cbd5e1;border-radius:8px;padding:20px;margin:12px 0}h1{font-size:24px}h2{font-size:20px}h3{font-size:17px}button,input,select{font:inherit}button{background:#1d4ed8;color:white;border:1px solid #1d4ed8;border-radius:4px;padding:9px 14px;cursor:pointer;margin:4px 4px 4px 0}button.secondary{background:white;color:#172033;border-color:#94a3b8}button.danger{background:#b91c1c;border-color:#b91c1c}button:disabled{opacity:.55;cursor:wait}input:not([type=radio]):not([type=checkbox]),select{padding:8px;border:1px solid #64748b;border-radius:4px;max-width:100%;background:white;color:#172033}input[type=radio],input[type=checkbox]{width:20px;height:20px;vertical-align:middle}label{display:block;margin:6px 0}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.row label{flex:1;min-width:150px}.row input{width:100%}fieldset{border:1px solid #cbd5e1;border-radius:4px;margin:18px 0;padding:12px}legend{font-weight:600;padding:0 5px}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.choices label{border:1px solid #cbd5e1;padding:9px;cursor:pointer;margin:0}.notice{border-left:4px solid #1d4ed8;background:#eff6ff;padding:12px}.warning{border-left:4px solid #b45309;background:#fffbeb;padding:12px}.small{font-size:13px;color:#475569}.hidden,[hidden]{display:none!important}#message{position:sticky;top:0;z-index:2;background:#fff;border:2px solid #b45309;padding:10px;white-space:pre-wrap}#message:empty{display:none}progress{width:100%;height:12px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}th{background:#f1f5f9}td.number{text-align:right}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:6px}#done{text-align:center}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:550px){body{padding:8px}section{padding:12px}.choices{grid-template-columns:1fr}}@media print{body{background:white;padding:0}header,#message,.no-print,section:not(#teacher):not(#detail):not(#student){display:none!important}section{border:0;padding:0}table{font-size:11px}tr,fieldset{break-inside:avoid}.tablewrap{overflow:visible}button{display:none!important}}
 </style></head><body><main>
 <header><h1>자아존중감 응답 도구</h1><p class="small">25문항 · 로컬 암호화 저장 · 상담 참고용 개발판입니다.</p></header>
 <div id="message" role="alert" aria-live="assertive"></div>
@@ -17,13 +17,20 @@
 <p class="notice">정답은 없습니다. 답하기 어렵다면 중단하고 선생님에게 이야기해도 됩니다. 결과는 담당 교사가 상담 참고 목적으로 확인하며, 이 화면에는 점수가 표시되지 않습니다. 인터넷으로 전송하지 않고 현재 브라우저에 암호화하여 저장합니다. 자료의 열람자·보관 기간·삭제 요청 방법은 담당 교사에게 확인해 주세요.</p>
 <form id="testForm"><div class="row"><label>검사 회차를 입력해 주세요.<input id="session" maxlength="60" required placeholder="예: 2026-1학기"></label><label>학년·반을 입력해 주세요.<input id="grade" maxlength="40" required placeholder="예: 3-2"></label><label>번호를 입력해 주세요.<input id="num" type="number" min="1" max="9999" step="1" required></label><label>이름 또는 교사가 지정한 코드를 입력해 주세요.<input id="name" maxlength="60" required autocomplete="off"></label></div>
 <label><input id="ack" type="checkbox" required> 위 안내를 읽었으며 검사를 진행하겠습니다.</label><p class="small">이 확인은 학교의 개인정보 처리 절차나 필요한 보호자 동의를 대신하지 않습니다.</p>
-<p id="progressText" role="status">25문항 중 0문항에 응답했습니다.</p><progress id="progress" value="0" max="25" aria-label="문항 응답 진행률"></progress><div id="questions"></div>
-<button id="submitTest" type="submit">응답을 제출합니다</button><button id="cancelTest" type="button" class="secondary">입력 내용을 지웁니다</button></form><hr><button id="teacherOpen" class="secondary">교사용 잠금을 해제합니다</button></section>
+<p id="progressText" role="status">25문항 중 0문항에 응답했습니다.</p><progress id="progress" value="0" max="25" aria-label="문항 응답 진행률"></progress><div id="questions"></div><aside id="scaleSource" class="small notice" aria-labelledby="sourceHeading">
+<h3 id="sourceHeading">검사 출처와 사용 안내입니다.</h3>
+<p><strong>관련 원척도는 스탠리 쿠퍼스미스(Stanley Coopersmith)의 자아존중감 검사(Self-Esteem Inventory, SEI)입니다.</strong> 국내에서는 이를 한국 아동·청소년의 실정에 맞게 번안·수정한 척도들이 연구되어 왔습니다.</p>
+<p>국내 관련 연구의 예로 최보가·전귀연(1993)의 「자아존중감 척도 개발에 관한 연구(Ⅰ)」, 『대한가정학회지』, 31(2), 41–54가 있습니다. 다만 이 연구는 관련 참고문헌이며, 현재 검사지의 25문항·4점 응답·하위영역 구성과 일치하는 번안 판본으로 확인된 것은 아닙니다. 김기정 연구를 포함하여 본 문항의 정확한 국내 번안자·수정자·연도는 확인이 필요합니다.</p>
+<p>본 도구는 기존 파일의 문항과 역채점 규칙을 유지한 상담 참고용 개발판입니다. 표준화된 SEI의 공식 한국어판으로 확인되지 않았으며, 점수만으로 심리적 상태를 진단하지 않습니다.</p>
+<p>참고문헌은 <a href="https://kiss.kstudy.com/Detail/Ar?key=146767" target="_blank" rel="noopener noreferrer">최보가·전귀연(1993)의 연구 서지</a>와 <a href="https://sjdm.org/dmidi/Coopersmith_Self-Esteem_Inventory.html" target="_blank" rel="noopener noreferrer">Coopersmith SEI 소개 자료</a>에서 확인할 수 있습니다.</p>
+</aside>
+<button id="submitTest" type="submit">응답을 제출합니다</button><button id="cancelTest" type="button" class="secondary">입력 내용을 지웁니다</button></form><hr><button id="printStudent" class="secondary no-print" type="button">학생 검사지를 인쇄합니다</button><button id="teacherOpen" class="secondary no-print">교사용 잠금을 해제합니다</button></section>
 <section id="done" hidden><h2>응답이 저장되었습니다.</h2><p>참여해 주셔서 감사합니다. 이름과 점수는 이 화면에 표시하지 않습니다.</p><button id="nextStudent">다음 학생 검사를 시작합니다</button><button id="doneTeacher" class="secondary">교사용 잠금을 해제합니다</button></section>
 <section id="teacher" hidden><h2>교사용 응답 관리</h2><p class="warning">총점 범위는 25~100점입니다. 이 점수는 기존 파일의 채점 규칙을 적용한 참고값입니다. 전국 규준, 백분위, 진단, 상담 필요성 판정이 아닙니다. 하위영역의 명칭·구성 타당성도 검증되지 않았습니다. 서로 다른 학년·회차를 합쳐 해석하지 마세요.</p>
-<div class="toolbar no-print"><button id="lock">잠그고 학생 화면으로 이동합니다</button><button id="backup">암호화 백업을 저장합니다</button><button id="csv" class="secondary">현재 목록을 CSV로 저장합니다</button><button id="printClass" class="secondary">현재 목록을 인쇄합니다</button><button id="passwordChange" class="secondary">암호를 변경합니다</button><button id="deleteAll" class="danger">전체 응답을 삭제합니다</button></div>
-<p class="small no-print">5분 동안 조작이 없거나 다른 탭·앱으로 이동하면 잠깁니다. CSV와 인쇄물은 암호화되지 않습니다. CSV에는 개별 문항 응답을 포함하지 않습니다.</p>
+<div class="toolbar no-print"><button id="lock">잠그고 학생 화면으로 이동합니다</button><button id="csvBackup">전체 엑셀용 CSV 백업을 저장합니다</button><button id="backup" class="secondary">암호화 JSON 백업을 저장합니다</button><button id="csv" class="secondary">현재 목록을 엑셀용 CSV로 저장합니다</button><button id="printClass" class="secondary">현재 목록을 인쇄합니다</button><button id="passwordChange" class="secondary">암호를 변경합니다</button><button id="deleteAll" class="danger">전체 응답을 삭제합니다</button></div>
+<p class="small no-print">5분 동안 조작이 없거나 다른 탭·앱으로 이동하면 잠깁니다. CSV와 인쇄물은 암호화되지 않습니다. CSV에는 학생 정보와 25개 문항 응답이 포함됩니다. 전체 CSV 백업은 필터와 관계없이 모든 응답을 저장하며, 암호화 JSON 백업도 계속 사용할 수 있습니다.</p>
 <div id="changeBox" class="panel no-print" hidden><form id="changeForm"><label>현재 암호를 입력해 주세요.<input id="oldPassword" type="password" required autocomplete="current-password"></label><label>새 암호를 입력해 주세요.<input id="newPassword" type="password" minlength="12" maxlength="200" required autocomplete="new-password"></label><label>새 암호를 다시 입력해 주세요.<input id="newPassword2" type="password" required autocomplete="new-password"></label><button type="submit">암호 변경을 저장합니다</button><button id="cancelChange" type="button" class="secondary">취소합니다</button></form></div>
+<div class="panel no-print"><h3>엑셀용 CSV 백업을 가져옵니다</h3><p class="small">이 수정판에서 저장한 CSV를 지원합니다. 현재 보관함에 병합하며, 같은 ID와 내용은 건너뜁니다. 동일 ID의 내용이 다르면 전체 가져오기를 중단합니다. 점수 열은 신뢰하지 않고 25개 응답에서 다시 계산합니다. 엑셀에서 수정 후 저장할 때는 CSV UTF-8 형식을 선택하고, 열 제목과 ID를 유지하세요.</p><label for="csvImport">엑셀용 CSV 백업을 선택해 주세요.</label><input id="csvImport" type="file" accept=".csv,text/csv"></div>
 <div class="panel no-print"><h3>원본 프로그램의 백업을 가져옵니다</h3><p class="small">원본의 평문 JSON 배열만 지원합니다. 25개 응답이 있는 행만 허용하며 점수는 다시 계산합니다. 날짜 정보가 없어 가져오기 회차를 지정해야 합니다. 같은 ID와 내용은 건너뛰고, 같은 ID에 다른 내용이 있으면 전체 가져오기를 중단합니다.</p><label>가져올 자료의 검사 회차를 입력해 주세요.<input id="importSession" maxlength="60" placeholder="예: 2025-2학기"></label><label for="legacyFile">원본 JSON 백업을 선택해 주세요.</label><input id="legacyFile" type="file" accept=".json,application/json"><button id="clearLegacy" class="danger">원본 프로그램의 평문 저장값을 삭제합니다</button></div>
 <div class="row no-print"><label>검사 회차를 선택해 주세요.<select id="sessionFilter"></select></label><label>학년·반을 선택해 주세요.<select id="gradeFilter"></select></label></div><p id="stats"></p><p class="small">표준편차는 표시된 자료의 기술통계이며 n으로 나눕니다. 동일 회차·학년반·번호가 겹치는 응답은 중복 확인 대상으로 표시하지만, 자동으로 삭제하거나 통계에서 제외하지 않습니다.</p><div id="list" class="tablewrap"></div></section>
 <section id="detail" hidden><div class="no-print"><button id="detailBack" class="secondary">목록으로 돌아갑니다</button><button id="printDetail" class="secondary">이 응답만 인쇄합니다</button><button id="detailLock">잠급니다</button></div><div id="detailContent"></div></section>
@@ -59,11 +66,70 @@ function validRecord(d){
 }
 function score(answers){
  must(Array.isArray(answers)&&answers.length===25&&answers.every(x=>Number.isInteger(x)&&x>=1&&x<=4),'채점할 응답이 잘못되었습니다.');
- const groups=GROUPS.map(g=>{const n=g.pos.length+g.neg.length;const raw=g.pos.reduce((s,i)=>s+answers[i-1],0)+g.neg.reduce((s,i)=>s+5-answers[i-1],0);return {name:g.name,raw,min:n,max:4*n,converted:100*(raw-n)/(3*n)};});
+ const groups=GROUPS.map(g=>{const n=g.pos.length+g.neg.length;const raw=g.pos.reduce((s,i)=>s+answers[i-1],0)+g.neg.reduce((s,i)=>s+5-answers[i-1],0);return {name:g.name,raw,min:n,max:4*n,converted:Math.round(raw/(4*n)*100)};});
  return {total:groups.reduce((s,g)=>s+g.raw,0),groups};
 }
 function stats(values){if(!values.length)return null;const mean=values.reduce((a,b)=>a+b,0)/values.length;return {n:values.length,mean,sd:Math.sqrt(values.reduce((s,v)=>s+(v-mean)**2,0)/values.length)};}
-function csvCell(v){let s=String(v);if(/^[\s\uFEFF]*[=+@\-＝＋－＠]/u.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+function csvCell(v){let s=String(v);if(s.startsWith("'")||/^[\s\uFEFF]*[=+@\-＝＋－＠]/u.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+
+const CSV_HEADERS=['백업형식','응답ID','검사 회차','학년/반','번호','이름/코드','저장 시각',...Array.from({length:25},(_,i)=>'문항'+(i+1)),'총점(25~100)',...GROUPS.flatMap(g=>[g.name+' 원점수',g.name+' 최대점수',g.name+' 백분율(%)'])];
+function exportCSV(data){
+ const rows=data.map(d=>{
+  const result=score(d.answers);
+  return ['selfesteem_csv_v1',d.id,d.session,d.grade,d.num,d.name,d.createdAt||'',...d.answers,result.total,...result.groups.flatMap(g=>[g.raw,g.max,g.converted])];
+ });
+ return '\uFEFF'+[CSV_HEADERS,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
+}
+function decodeCSVText(value){
+ if(value.startsWith("'")&&(value[1]==="'"||/^[\s\uFEFF]*[=+@\-＝＋－＠]/u.test(value.slice(1))||/^[\t\r\n]/.test(value.slice(1))))return value.slice(1);
+ return value;
+}
+function parseCSV(text){
+ text=text.replace(/^\uFEFF/,'');
+ const rows=[];let row=[],cell='',quoted=false,closed=false;
+ function finishCell(){row.push(cell);cell='';closed=false;must(row.length<=CSV_HEADERS.length,'CSV 열이 너무 많습니다.');}
+ function finishRow(){finishCell();if(row.some(x=>x!==''))rows.push(row);row=[];must(rows.length<=MAX+1,'CSV는 최대 2,000건까지 가져올 수 있습니다.');}
+ for(let i=0;i<text.length;i++){
+  const c=text[i];
+  if(quoted){
+   if(c==='"'){if(text[i+1]==='"'){cell+='"';i++;}else{quoted=false;closed=true;}}
+   else cell+=c;
+  }else if(c===','){finishCell();}
+  else if(c==='\r'||c==='\n'){if(c==='\r'&&text[i+1]==='\n')i++;finishRow();}
+  else if(c==='"'){must(cell===''&&!closed,'CSV 따옴표 형식이 잘못되었습니다.');quoted=true;}
+  else{must(!closed,'CSV 닫는 따옴표 뒤에 잘못된 문자가 있습니다.');cell+=c;}
+ }
+ must(!quoted,'CSV 따옴표가 닫히지 않았습니다.');
+ if(cell!==''||row.length||closed)finishRow();
+ return rows;
+}
+function recordsFromCSV(text){
+ const rows=parseCSV(text);
+ must(rows.length>=2,'CSV에 응답 데이터가 없습니다.');
+ must(JSON.stringify(rows[0])===JSON.stringify(CSV_HEADERS),'이 수정판의 CSV 열 제목과 순서를 유지해 주세요. 인코딩은 UTF-8이어야 합니다.');
+ return rows.slice(1).map((r,i)=>{
+  must(r.length===CSV_HEADERS.length&&r[0]==='selfesteem_csv_v1',(i+2)+'행의 CSV 형식이 잘못되었습니다.');
+  must(/^\d+$/.test(r[4]),(i+2)+'행의 번호가 잘못되었습니다.');
+  const answers=r.slice(7,32).map(x=>{must(/^[1-4]$/.test(x),(i+2)+'행의 응답은 1~4의 정수여야 합니다.');return Number(x);});
+  return validRecord({id:r[1],session:decodeCSVText(r[2]),grade:decodeCSVText(r[3]),num:Number(r[4]),name:decodeCSVText(r[5]),createdAt:r[6]||null,answers});
+ });
+}
+function planMerge(existing,incoming){
+ const known=new Map(existing.map(d=>[d.id,d]));const added=[];let skipped=0;
+ for(const d of incoming){
+  if(known.has(d.id)){must(JSON.stringify(known.get(d.id))===JSON.stringify(d),'동일 ID에 다른 내용이 있어 가져오기를 중단했습니다: '+d.id);skipped++;}
+  else{known.set(d.id,d);added.push(d);}
+ }
+ must(existing.length+added.length<=MAX,'가져오기 후 2,000건을 초과합니다.');
+ return {added,skipped};
+}
+function saveCSV(data,all){
+ guard();if(!data.length){message('내보낼 응답이 없습니다.');return;}
+ if(!confirm((all?'전체 '+data.length+'건':'현재 목록 '+data.length+'건')+'의 학생 정보·25개 응답·점수가 암호화되지 않은 CSV로 저장됩니다. 안전한 위치에 보관할까요?'))return;
+ download(exportCSV(data),'selfesteem_'+(all?'backup_all_':'results_filtered_')+new Date().toISOString().slice(0,10)+'.csv','text/csv;charset=utf-8');
+ message('엑셀용 UTF-8 CSV 다운로드를 요청했습니다. 다운로드 폴더를 확인하세요. 이 파일에는 암호화되지 않은 개별 응답이 포함되어 있습니다.');
+}
+
 function b64(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes)));}
 function bytes(s){must(typeof s==='string'&&s.length>0&&s.length<=32000&&/^[A-Za-z0-9+/]*={0,2}$/.test(s),'암호화 데이터 형식이 잘못되었습니다.');return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
 function random(n){return crypto.getRandomValues(new Uint8Array(n));}
@@ -127,8 +193,8 @@ function renderTeacher(refresh=true){
 }
 function showDetail(id){guard();const d=records.find(r=>r.id===id);if(!d)return;screen('detail');const box=$('detailContent');box.replaceChildren();box.append(node('h2',d.name+' 학생의 응답'),node('p',`${d.session} / ${d.grade} / ${d.num}번`),node('p',d.createdAt?'저장 시각: '+new Date(d.createdAt).toLocaleString('ko-KR'):'원본 자료에 검사 시각이 없어 확인할 수 없습니다.'));
  const s=score(d.answers);box.append(node('p',`총점은 ${s.total}점입니다. 가능한 범위는 25~100점입니다.`,'notice'));
- box.append(table(['기존 하위영역','원점수','가능한 범위','범위 환산점수(0~100)'],s.groups.map(g=>[g.name,g.raw,`${g.min}~${g.max}`,g.converted.toFixed(1)])));
- box.append(node('p','환산점수 = (원점수 − 가능한 최솟값) ÷ (가능한 최댓값 − 최솟값) × 100입니다. 백분위나 규준점수가 아니며, 높고 낮음에 따른 진단 기준을 뜻하지 않습니다. 모든 영역은 기존 역채점 규칙을 적용한 방향으로 표시합니다.','small'));
+ box.append(table(['기존 하위영역','원점수','가능한 범위','하위영역 백분율(%)'],s.groups.map(g=>[g.name,g.raw,`${g.min}~${g.max}`,g.converted+'%'])));
+ box.append(node('p','하위영역 백분율 = 원점수 ÷ 기존 하위영역 최대 점수 × 100이며, 소수 첫째 자리에서 반올림한 정수로 표시합니다. 가능한 범위는 25~100%입니다. 백분위나 규준점수가 아니며, 높고 낮음에 따른 진단 기준을 뜻하지 않습니다. 모든 영역은 기존 역채점 규칙을 적용한 방향으로 표시합니다.','small'));
  box.append(node('p','점수만으로 정서적 안정, 취약성 또는 상담 필요성을 판단하지 않습니다. 학생이 원할 때 최근 경험과 필요한 도움을 비판단적으로 확인하세요. 응답 내용은 다른 학생에게 공개하지 마세요.','warning'));
  box.append(table(['문항','학생이 선택한 응답','채점값'],QUESTIONS.map((q,i)=>{const neg=GROUPS.some(g=>g.neg.includes(i+1));return [(i+1)+'. '+q,d.answers[i]+'. '+LABELS[d.answers[i]-1],neg?5-d.answers[i]:d.answers[i]]})));
 }
@@ -167,9 +233,21 @@ async function initialize(){
  on('sessionFilter','change',()=>renderTeacher(false));on('gradeFilter','change',()=>renderTeacher(false));on('detailBack','click',()=>renderTeacher(false));
  for(const id of ['printClass','printDetail'])on(id,'click',()=>{guard();if(confirm('인쇄물은 암호화되지 않습니다. 다른 학생에게 노출되지 않도록 관리할까요?'))window.print();});
  on('backup','click',()=>{guard();download(JSON.stringify(store),'selfesteem_encrypted_backup_'+new Date().toISOString().slice(0,10)+'.json','application/json');message('암호화 백업 다운로드를 요청했습니다. 다운로드 폴더를 확인하고 해당 암호를 별도로 안전하게 보관하세요.');});
- on('csv','click',()=>{guard();const data=filtered();if(!data.length){message('내보낼 응답이 없습니다.');return;}if(!confirm('현재 목록의 이름/코드와 점수가 평문 CSV로 저장됩니다. 안전한 위치에 보관할까요?'))return;
- const headers=['검사 회차','학년/반','번호','이름/코드','저장 시각','총점(25~100)',...GROUPS.map(g=>g.name+' 원점수')];const rows=data.map(d=>[d.session,d.grade,d.num,d.name,d.createdAt||'시각 미상',score(d.answers).total,...score(d.answers).groups.map(g=>g.raw)]);
- download('﻿'+[headers,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n'),'selfesteem_results.csv','text/csv;charset=utf-8');message('평문 CSV 다운로드를 요청했습니다. 수식 방어를 적용했지만 다른 앱에서 재저장한 파일은 다시 확인하세요.');});
+ on('csv','click',()=>saveCSV(filtered(),false));
+ on('csvBackup','click',()=>saveCSV(records,true));
+ on('printStudent','click',()=>window.print());
+ on('csvImport','change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;task(async()=>{
+  guard();const token=epoch;
+  must(f.size>0&&f.size<=MAXFILE,'8MB 이하의 CSV 파일을 선택해 주세요.');
+  const input=recordsFromCSV(await f.text());current(token);
+  const {added,skipped}=planMerge(records,input);
+  if(!added.length){message('새로 가져올 응답이 없습니다. 동일한 '+skipped+'건을 건너뛰었습니다.');return;}
+  if(!confirm(added.length+'건을 현재 보관함에 암호화하여 추가할까요? 동일한 '+skipped+'건은 건너뜁니다.')){message('가져오기를 취소했습니다.');return;}
+  const entries=[];
+  for(const d of added){current(token);entries.push(await encryptRecord(d,store,publicKey));}
+  current(token);commit({...store,entries:[...store.entries,...entries]});records.push(...added);renderTeacher();
+  message(added.length+'건을 암호화하여 가져왔고, 동일한 '+skipped+'건을 건너뛰었습니다. 점수는 문항 응답에서 다시 계산했습니다.');
+ });});
  on('deleteAll','click',()=>task(async()=>{guard();if(!confirm('현재 보관함의 모든 응답을 삭제할까요? 내려받은 백업과 CSV는 따로 삭제해야 합니다.')){message('');return;}if(prompt('삭제하려면 전체삭제를 입력하세요.')!=='전체삭제'){message('삭제를 취소했습니다.');return;}commit({...store,entries:[]});records=[];renderTeacher();}));
  on('passwordChange','click',()=>{guard();$('changeBox').hidden=false;$('oldPassword').focus();});on('cancelChange','click',()=>{$('changeForm').reset();$('changeBox').hidden=true;});
  on('changeForm','submit',e=>{e.preventDefault();task(async()=>{guard();const token=epoch,pass=$('newPassword').value;must(pass.length>=12&&pass.length<=200&&pass===$('newPassword2').value,'새 암호의 길이와 일치 여부를 확인해 주세요.');const priv=await openPrivate(store,$('oldPassword').value);const salt=b64(random(16)),k=await derive(pass,salt),jwk=await crypto.subtle.exportKey('jwk',priv);const box=await seal(k,enc.encode(JSON.stringify(jwk)),store.vaultId);current(token);commit({...store,kdf:{name:'PBKDF2-SHA256',iterations:ITER,salt},privateBox:box});$('changeForm').reset();$('changeBox').hidden=true;message('암호를 변경했습니다. 새 암호화 백업을 받으세요. 이전 백업은 여전히 이전 암호로 열립니다.');});});

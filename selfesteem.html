@@ -13,11 +13,12 @@
         .form-group input { width: 100px; padding: 8px; margin-right: 10px; }
         .question { background: #fafafa; padding: 15px; margin-bottom: 10px; border-left: 4px solid #4CAF50; }
         .options label { margin-right: 15px; cursor: pointer; display: inline-block; margin-top: 5px; }
-        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; margin-right: 5px; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; margin-right: 5px; margin-bottom: 5px; }
         button:hover { background: #45a049; }
         .btn-blue { background: #2196F3; } .btn-blue:hover { background: #1976D2; }
         .btn-dark { background: #333; } .btn-dark:hover { background: #222; }
         .btn-warn { background: #ff9800; } .btn-warn:hover { background: #e68a00; }
+        .btn-danger { background: #f44336; } .btn-danger:hover { background: #d32f2f; }
         
         .hidden { display: none !important; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
@@ -75,10 +76,12 @@
     
     <div class="data-management no-print">
         <strong>데이터 관리 및 보안:</strong>
-        <button onclick="exportJSON()" class="btn-blue">현재 결과 내보내기 (.json)</button>
+        <button onclick="exportCSV()" class="btn-blue">엑셀(CSV) 다운로드</button>
+        <button onclick="exportJSON()" class="btn-dark">백업용 파일 내보내기 (.json)</button>
         <button onclick="changePassword()" class="btn-warn">비밀번호 변경</button>
-        <div style="border-left: 2px solid #ccc; padding-left: 15px;">
-            <label for="file-input" style="cursor:pointer; font-weight:bold; margin-right:5px;">다른 반 데이터 불러오기:</label>
+        <button onclick="clearAllData()" class="btn-danger">모든 데이터 초기화</button>
+        <div style="border-left: 2px solid #ccc; padding-left: 15px; width: 100%; margin-top: 5px;">
+            <label for="file-input" style="cursor:pointer; font-weight:bold; margin-right:5px;">백업 파일(.json) 불러오기:</label>
             <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
         </div>
     </div>
@@ -143,13 +146,30 @@
     };
 
     let resultsData = [];
+    const STORAGE_KEY = 'self_esteem_results_data';
 
-    // 로컬 스토리지에서 비밀번호 관리 (기본값 "0000")
+    function loadSavedData() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                resultsData = JSON.parse(saved);
+            } catch (e) {
+                resultsData = [];
+            }
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(resultsData));
+    }
+
     function getTeacherPassword() {
         return localStorage.getItem('teacher_pwd') || "0000";
     }
 
     window.onload = function() {
+        loadSavedData();
+
         const container = document.getElementById('questions-container');
         questionsText.forEach((text, i) => {
             const qNum = i + 1;
@@ -208,6 +228,7 @@
         };
 
         resultsData.push(studentData);
+        saveData();
         alert("제출이 완료되었습니다."); 
         
         showOwnResult(studentData);
@@ -235,12 +256,11 @@
         window.scrollTo(0, 0);
     }
 
-    // --- 비밀번호 확인 및 찾기 기능 구현 ---
     function checkTeacherAccess() {
         let currentPwd = getTeacherPassword();
         let inputPwd = prompt("교사용 결과 확인을 위한 비밀번호를 입력하세요.\n(비밀번호를 잊으셨다면 '찾기' 또는 '초기화'를 입력하세요)");
         
-        if (inputPwd === null) return; // 취소 버튼
+        if (inputPwd === null) return; 
 
         if (inputPwd === "찾기" || inputPwd === "초기화") {
             let hintConfirm = confirm("비밀번호를 초기화(기본값: 0000) 하시겠습니까?\n[확인]을 누르면 초기화됩니다.");
@@ -256,10 +276,10 @@
             return;
         }
 
+        updateTeacherView();
         toggleView('teacher');
     }
 
-    // --- 비밀번호 변경 기능 ---
     function changePassword() {
         let currentPwd = getTeacherPassword();
         let oldInput = prompt("현재 비밀번호를 입력하세요:");
@@ -273,6 +293,15 @@
             alert("교사용 비밀번호가 성공적으로 변경되었습니다.");
         } else {
             alert("올바른 비밀번호를 입력해주세요.");
+        }
+    }
+
+    function clearAllData() {
+        if (confirm("정말 모든 학생 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+            resultsData = [];
+            localStorage.removeItem(STORAGE_KEY);
+            updateTeacherView();
+            alert("모든 데이터가 초기화되었습니다.");
         }
     }
 
@@ -354,7 +383,8 @@
         let answersHtml = '<div class="answer-grid">';
         if(d.answers) {
             d.answers.forEach((ans, i) => {
-                answersHtml += `<div class="answer-item"><strong>${i+1}번.</strong> ${questionsText[i]}<br><span style="color:#2196F3;">[학생 선택: ${ans}점]</span></div>`;
+                // 교사 상세 화면의 문항 응답 표기를 "1점" 대신 "1번"으로 변경
+                answersHtml += `<div class="answer-item"><strong>${i+1}번.</strong> ${questionsText[i]}<br><span style="color:#2196F3;">[학생 선택: ${ans}번]</span></div>`;
             });
         }
         answersHtml += '</div>';
@@ -388,6 +418,39 @@
         document.body.className = 'print-student'; 
     }
 
+    function exportCSV() {
+        if(resultsData.length === 0) {
+            alert("내보낼 데이터가 없습니다.");
+            return;
+        }
+
+        let csvContent = "\uFEFF"; 
+        csvContent += "학년/반,번호,이름,총점,자기비하(%),타인과의관계(%),지도력과인기(%),자기주장과불안(%)\r\n";
+
+        resultsData.forEach(d => {
+            let row = [
+                `"${d.grade}"`,
+                d.num,
+                `"${d.name}"`,
+                d.total,
+                d.p1,
+                d.p2,
+                d.p3,
+                d.p4
+            ];
+            csvContent += row.join(",") + "\r\n";
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        let linkElement = document.createElement('a');
+        linkElement.setAttribute('href', url);
+        linkElement.setAttribute('download', '학급_자아존중감_통합결과.csv');
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+    }
+
     function exportJSON() {
         if(resultsData.length === 0) {
             alert("내보낼 데이터가 없습니다.");
@@ -397,7 +460,7 @@
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         let linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', '학급_자아존중감_통합결과.json');
+        linkElement.setAttribute('download', '학급_자아존중감_백업.json');
         document.body.appendChild(linkElement);
         linkElement.click();
         document.body.removeChild(linkElement);
@@ -420,7 +483,8 @@
                         }
                         return false;
                     });
-                    alert("데이터 병합이 완료되었습니다! 현재 총 모집단: " + resultsData.length + "명");
+                    saveData();
+                    alert("데이터 병합 및 저장 완료! 현재 총 모집단: " + resultsData.length + "명");
                     updateTeacherView();
                 } else {
                     alert("지원하지 않는 형식입니다.");

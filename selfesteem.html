@@ -17,6 +17,7 @@
         button:hover { background: #45a049; }
         .btn-blue { background: #2196F3; } .btn-blue:hover { background: #1976D2; }
         .btn-dark { background: #333; } .btn-dark:hover { background: #222; }
+        .btn-warn { background: #ff9800; } .btn-warn:hover { background: #e68a00; }
         
         .hidden { display: none !important; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
@@ -56,11 +57,11 @@
 
     <div id="questions-container" class="no-print"></div>
     <button onclick="submitTest()" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 10px;" class="no-print">검사 제출하기</button>
-    <button class="btn-dark no-print" onclick="toggleView('teacher')" style="margin-top: 20px; float: right;">교사용 결과 보기</button>
+    <button class="btn-dark no-print" onclick="checkTeacherAccess()" style="margin-top: 20px; float: right;">교사용 결과 보기</button>
     <div style="clear:both;"></div>
 </div>
 
-<!-- 2. 학생 제출 완료 화면 (학생 본인은 점수를 보지 못하게 수정됨) -->
+<!-- 2. 학생 제출 완료 화면 (학생 본인 점수 비공개) -->
 <div class="container hidden" id="student-own-result">
     <div id="own-result-content" style="padding: 40px 20px; text-align: center;">
         <!-- 완료 메시지 렌더링 영역 -->
@@ -73,8 +74,9 @@
     <h2 id="class-title">학급 및 통합 검사 결과</h2>
     
     <div class="data-management no-print">
-        <strong>데이터 병합 및 관리:</strong>
+        <strong>데이터 관리 및 보안:</strong>
         <button onclick="exportJSON()" class="btn-blue">현재 결과 내보내기 (.json)</button>
+        <button onclick="changePassword()" class="btn-warn">비밀번호 변경</button>
         <div style="border-left: 2px solid #ccc; padding-left: 15px;">
             <label for="file-input" style="cursor:pointer; font-weight:bold; margin-right:5px;">다른 반 데이터 불러오기:</label>
             <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
@@ -142,6 +144,11 @@
 
     let resultsData = [];
 
+    // 로컬 스토리지에서 비밀번호 관리 (기본값 "0000")
+    function getTeacherPassword() {
+        return localStorage.getItem('teacher_pwd') || "0000";
+    }
+
     window.onload = function() {
         const container = document.getElementById('questions-container');
         questionsText.forEach((text, i) => {
@@ -208,7 +215,6 @@
     }
 
     function showOwnResult(d) {
-        // 학생 본인은 결과 점수를 보지 않고 제출 완료 메시지만 확인하도록 수정
         const html = `
             <h2 style="color:#4CAF50; margin-bottom: 20px;">완료해 주셔서 감사합니다.</h2>
             <p style="font-size: 16px; color:#555;">${d.grade} ${d.num}번 ${d.name} 학생의 검사가 정상적으로 제출되었습니다.</p>
@@ -227,6 +233,47 @@
         document.getElementById('student-own-result').classList.add('hidden');
         document.getElementById('student-view').classList.remove('hidden');
         window.scrollTo(0, 0);
+    }
+
+    // --- 비밀번호 확인 및 찾기 기능 구현 ---
+    function checkTeacherAccess() {
+        let currentPwd = getTeacherPassword();
+        let inputPwd = prompt("교사용 결과 확인을 위한 비밀번호를 입력하세요.\n(비밀번호를 잊으셨다면 '찾기' 또는 '초기화'를 입력하세요)");
+        
+        if (inputPwd === null) return; // 취소 버튼
+
+        if (inputPwd === "찾기" || inputPwd === "초기화") {
+            let hintConfirm = confirm("비밀번호를 초기화(기본값: 0000) 하시겠습니까?\n[확인]을 누르면 초기화됩니다.");
+            if (hintConfirm) {
+                localStorage.removeItem('teacher_pwd');
+                alert("비밀번호가 기본값(0000)으로 초기화되었습니다. 다시 교사용 화면에 접속해 주세요.");
+            }
+            return;
+        }
+
+        if (inputPwd !== currentPwd) {
+            alert("비밀번호가 일치하지 않습니다. (비밀번호를 잊으셨다면 창에 '찾기'를 입력해보세요)");
+            return;
+        }
+
+        toggleView('teacher');
+    }
+
+    // --- 비밀번호 변경 기능 ---
+    function changePassword() {
+        let currentPwd = getTeacherPassword();
+        let oldInput = prompt("현재 비밀번호를 입력하세요:");
+        if (oldInput !== currentPwd) {
+            alert("현재 비밀번호가 일치하지 않습니다.");
+            return;
+        }
+        let newPwd = prompt("사용할 새 비밀번호를 입력하세요:");
+        if (newPwd && newPwd.trim() !== "") {
+            localStorage.setItem('teacher_pwd', newPwd.trim());
+            alert("교사용 비밀번호가 성공적으로 변경되었습니다.");
+        } else {
+            alert("올바른 비밀번호를 입력해주세요.");
+        }
     }
 
     function calcStats(arr) {
@@ -379,7 +426,7 @@
                     alert("지원하지 않는 형식입니다.");
                 }
             } catch (err) {
-                alert("파일을 읽는 중 오류가 발생했습니다. 데이터가 손상되었거나 내용이 부정확하다 볼 수 있습니다.");
+                alert("파일을 읽는 중 오류가 발생했습니다.");
             }
         };
         reader.readAsText(file);
@@ -393,15 +440,6 @@
     }
 
     function toggleView(view) {
-        if(view === 'teacher') {
-            const pwd = prompt("교사용 결과 확인을 위한 비밀번호를 입력하세요. (기본: 0000)");
-            if(pwd !== "0000") {
-                alert("비밀번호가 일치하지 않습니다.");
-                return;
-            }
-            updateTeacherView();
-        }
-
         document.getElementById('student-view').classList.add('hidden');
         document.getElementById('student-own-result').classList.add('hidden');
         document.getElementById('teacher-view').classList.add('hidden');

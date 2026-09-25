@@ -1,0 +1,110 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'" http-equiv="Content-Security-Policy"/><title>자아존중감 검사 — 학생용</title><style>
+:root{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f6f8;line-height:1.6}*{box-sizing:border-box}body{margin:0;padding:16px}main{max-width:1000px;margin:auto}section,.panel{background:white;border:1px solid #cbd5e1;border-radius:8px;padding:20px;margin:12px 0}h1{font-size:24px}h2{font-size:20px}h3{font-size:17px}button,input,select{font:inherit}button{background:#1d4ed8;color:white;border:1px solid #1d4ed8;border-radius:4px;padding:9px 14px;cursor:pointer;margin:4px 4px 4px 0}button.secondary{background:white;color:#172033;border-color:#94a3b8}button.danger{background:#b91c1c;border-color:#b91c1c}button:disabled{opacity:.55;cursor:wait}input:not([type=radio]):not([type=checkbox]),select{padding:8px;border:1px solid #64748b;border-radius:4px;max-width:100%;background:white;color:#172033}input[type=radio],input[type=checkbox]{width:20px;height:20px;vertical-align:middle}label{display:block;margin:6px 0}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.row label{flex:1;min-width:150px}.row input{width:100%}fieldset{border:1px solid #cbd5e1;border-radius:4px;margin:18px 0;padding:12px}legend{font-weight:600;padding:0 5px}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.choices label{border:1px solid #cbd5e1;padding:9px;cursor:pointer;margin:0}.notice{border-left:4px solid #1d4ed8;background:#eff6ff;padding:12px}.warning{border-left:4px solid #b45309;background:#fffbeb;padding:12px}.small{font-size:13px;color:#475569}.hidden,[hidden]{display:none!important}#message{position:sticky;top:0;z-index:2;background:#fff;border:2px solid #b45309;padding:10px;white-space:pre-wrap}#message:empty{display:none}progress{width:100%;height:12px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}th{background:#f1f5f9}td.number{text-align:right}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:6px}#done{text-align:center}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:550px){body{padding:8px}section{padding:12px}.choices{grid-template-columns:1fr}}@media print{body{background:white;padding:0}header,#message,.no-print,section:not(#teacher):not(#detail):not(#student){display:none!important}section{border:0;padding:0}table{font-size:11px}tr,fieldset{break-inside:avoid}.tablewrap{overflow:visible}button{display:none!important}}
+
+main{max-width:760px}.choices label{padding:16px;min-height:58px;display:flex;gap:10px;align-items:center}.choices label:has(input:checked){border:2px solid #1d4ed8;background:#eff6ff}fieldset{margin:22px 0}legend{font-size:18px}#sources{margin:20px 0;font-size:13px}#sources summary{cursor:pointer;color:#475569}.navigation{display:flex;justify-content:space-between}#filename{word-break:break-all}@media print{body{display:none!important}}</style></head><body><main><header><p class="small">학생 검사용입니다.</p><h1>나의 평소 느낌을 알아봅니다.</h1></header><div id="message" role="alert" aria-live="assertive"></div>
+<section id="setup"><h2>선생님이 준 검사 설정 파일을 열어 주세요.</h2><p>처음 한 번만 설정하면 됩니다. 교사 비밀번호는 필요하지 않습니다.</p><label>검사 설정 JSON 파일을 선택하세요.<input id="configFile" type="file" accept=".json,application/json"></label><p class="small">이 파일은 인터넷으로 응답을 전송하지 않습니다. 검사 후 응답 파일을 저장하여 선생님께 전달해야 합니다.</p></section>
+<section id="intro" hidden><h2>정답은 없습니다.</h2><p id="context"></p><p>평소의 나와 가장 가까운 답을 골라 주세요. 25문항을 5문항씩 보여 드립니다. 답하기 어렵다면 중단하고 선생님에게 이야기해도 됩니다.</p><p class="small">담당 교사가 상담 참고 목적으로 응답을 확인합니다. 열람자·보관 기간·삭제 요청 방법은 선생님께 확인하세요. 이 화면에는 점수가 표시되지 않습니다.</p><form id="infoForm"><div class="row"><label>번호를 입력해 주세요.<input id="num" type="number" min="1" max="9999" step="1" required></label><label>이름 또는 선생님이 정한 코드를 입력해 주세요.<input id="name" maxlength="60" autocomplete="off" required></label></div><label><input id="ack" type="checkbox" required> 안내를 읽었으며 검사를 진행하겠습니다.</label><p class="small">이 확인은 학교의 개인정보 처리 절차나 필요한 보호자 동의를 대신하지 않습니다.</p><button type="submit">검사를 시작합니다</button><button id="changeSetup" class="secondary" type="button">검사 설정을 바꿉니다</button></form></section>
+<section id="test" hidden><h2 id="pageHeading" tabindex="-1"></h2><p id="progressText" role="status"></p><progress id="progress" max="25" value="0" aria-label="전체 응답 진행률"></progress><form id="testForm" novalidate><div id="questions"></div><div class="navigation"><button type="button" id="prev" class="secondary">이전으로 갑니다</button><button type="submit" id="next">다음으로 갑니다</button></div><button type="button" id="cancel" class="secondary">검사를 중단하고 입력을 지웁니다</button></form></section>
+<section id="done" hidden><h2>응답 파일 저장을 요청했습니다.</h2><p>다운로드 폴더에 파일이 있는지 확인하고 선생님이 안내한 방법으로 전달해 주세요. <strong>파일을 전달해야 제출이 완료됩니다.</strong></p><p id="filename"></p><p class="small">이 파일은 암호화되어 담당 교사의 보관함에서만 열 수 있습니다. 브라우저는 다운로드 성공 여부를 확인할 수 없습니다.</p><button id="saveAgain">응답 파일을 다시 저장합니다</button><button id="nextStudent" class="secondary">다음 학생 검사를 준비합니다</button></section>
+<details id="sources"><summary>검사 출처와 사용 안내를 확인합니다.</summary><aside aria-labelledby="sourceHeading" class="small notice" id="scaleSource">
+<h3 id="sourceHeading">검사 출처와 사용 안내입니다.</h3>
+<p><strong>관련 원척도는 스탠리 쿠퍼스미스(Stanley Coopersmith)의 자아존중감 검사(Self-Esteem Inventory, SEI)입니다.</strong> 국내에서는 이를 한국 아동·청소년의 실정에 맞게 번안·수정한 척도들이 연구되어 왔습니다.</p>
+<p>국내 관련 연구의 예로 최보가·전귀연(1993)의 「자아존중감 척도 개발에 관한 연구(Ⅰ)」, 『대한가정학회지』, 31(2), 41–54가 있습니다. 다만 이 연구는 관련 참고문헌이며, 현재 검사지의 25문항·4점 응답·하위영역 구성과 일치하는 번안 판본으로 확인된 것은 아닙니다. 김기정 연구를 포함하여 본 문항의 정확한 국내 번안자·수정자·연도는 확인이 필요합니다.</p>
+<p>본 도구는 기존 파일의 문항과 역채점 규칙을 유지한 상담 참고용 개발판입니다. 표준화된 SEI의 공식 한국어판으로 확인되지 않았으며, 점수만으로 심리적 상태를 진단하지 않습니다.</p>
+<p>참고문헌은 <a href="https://kiss.kstudy.com/Detail/Ar?key=146767" rel="noopener noreferrer" target="_blank">최보가·전귀연(1993)의 연구 서지</a>와 <a href="https://sjdm.org/dmidi/Coopersmith_Self-Esteem_Inventory.html" rel="noopener noreferrer" target="_blank">Coopersmith SEI 소개 자료</a>에서 확인할 수 있습니다.</p>
+</aside></details></main><script>'use strict';
+(()=>{
+const QUESTIONS = ["나는 가끔 내가 다른 사람이었으면 하고 바란다.", "나는 여러 사람 앞에서 이야기하기가 어렵다.", "나에게는 고쳐야 할 점이 많다.", "나는 어렵지 않게 마음을 결정할 수 있다.", "나는 다른 사람들과 재미있게 지낸다.", "가족 중엔 나에게 관심을 보여주는 사람이 없다.", "나는 새로운 것에 익숙해지기까지 많은 시간이 걸린다.", "나는 친구들에게 인기가 있다.", "우리 가족은 나에게 너무 많은 기대를 한다.", "우리 가족은 대체로 내 기분을 이해해 주는 편이다.", "나는 많은 경우에 쉽게 포기하는 편이다.", "나는 비교적 남보다 행복한 편이다.", "나의 생활은 뒤죽박죽이다.", "대체로 다른 사람들이 내 생각을 따라주는 편이다.", "나 자신에 대해 별로 내세울 것이 없다.", "나는 집을 나가 버리고 싶은 생각이 자주 든다.", "종종 내가 하는 일이 뜻대로 되지 않는다.", "나는 외모가 그리 멋진 편이 못된다.", "나는 할 말이 있을 때 대체로 그 말을 하는 편이다.", "우리 가족들이 나를 잘 이해하고 있다.", "다른 사람들에 비해서 나는 별로 사랑받지 못한다.", "어떤 때는 가족들이 나를 미워하는 것 같다.", "내가 하고 있는 일에 대해 실망을 느낄 때가 많다.", "나는 모든 것이 그다지 어렵게 생각되지는 않는다.", "나는 다른 사람이 나에게 의지해도 될 만큼 강하지 못하다."];
+const LABELS=['전혀 그렇지 않다','약간 그렇지 않다','약간 그렇다','아주 그렇다'];
+const enc=new TextEncoder();const $=id=>document.getElementById(id);
+function node(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=String(text);if(cls)e.className=cls;return e;}
+function message(s){$('message').textContent=s;}
+function must(ok,msg){if(!ok)throw new Error(msg);}
+function textField(v,max,label){must(typeof v==='string',label+' 형식이 잘못되었습니다.');const s=v.trim();must(s.length>0&&s.length<=max&&!/[\u0000-\u001f\u007f]/.test(s),label+' 입력을 확인해 주세요.');return s;}
+function validRecord(d){
+ must(d&&typeof d==='object'&&!Array.isArray(d),'응답 객체 형식이 잘못되었습니다.');
+ must(typeof d.id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(d.id),'응답 ID가 잘못되었습니다.');
+ must(Number.isInteger(d.num)&&d.num>=1&&d.num<=9999,'번호는 1~9999의 정수여야 합니다.');
+ must(Array.isArray(d.answers)&&d.answers.length===25&&d.answers.every(x=>Number.isInteger(x)&&x>=1&&x<=4),'25개 응답은 각각 1~4의 정수여야 합니다.');
+ must(d.createdAt===null||(typeof d.createdAt==='string'&&d.createdAt.length<=30&&Number.isFinite(Date.parse(d.createdAt))),'검사 시각이 잘못되었습니다.');
+ return {id:d.id,session:textField(d.session,60,'검사 회차'),grade:textField(d.grade,40,'학년·반'),num:d.num,name:textField(d.name,60,'이름 또는 코드'),createdAt:d.createdAt,answers:[...d.answers]};
+}
+function b64(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes)));}
+function bytes(s){must(typeof s==='string'&&s.length>0&&s.length<=32000&&/^[A-Za-z0-9+/]*={0,2}$/.test(s),'암호화 데이터 형식이 잘못되었습니다.');return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+function random(n){return crypto.getRandomValues(new Uint8Array(n));}
+async function seal(key,plain,aad){const iv=random(12);return {iv:b64(iv),ct:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc.encode(aad)},key,plain))};}
+async function publicOf(s){return crypto.subtle.importKey('jwk',s.publicJwk,{name:'RSA-OAEP',hash:'SHA-256'},false,['encrypt']);}
+async function encryptRecord(d,s,pub){
+ d=validRecord(d);const aes=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+ const key=await crypto.subtle.encrypt({name:'RSA-OAEP'},pub,await crypto.subtle.exportKey('raw',aes));
+ return {id:d.id,key:b64(key),...await seal(aes,enc.encode(JSON.stringify(d)),s.vaultId+':'+d.id)};
+}
+function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=node('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);}
+
+let config=null,pub=null,page=0,answers=Array(25).fill(null),identity=null,pending=null,pendingName='',working=false;
+function view(id){for(const k of ['setup','intro','test','done'])$(k).hidden=k!==id;message('');window.scrollTo(0,0);}
+function validConfig(c){
+ must(c&&c.format==='selfesteem-student-setup-v1','선생님이 준 검사 설정 JSON 파일을 선택해 주세요.');
+ must(typeof c.vaultId==='string'&&/^[a-f0-9-]{36}$/.test(c.vaultId),'보관함 ID가 잘못되었습니다.');
+ const k=c.publicJwk;
+ must(k&&k.kty==='RSA'&&typeof k.n==='string'&&/^[A-Za-z0-9_-]{342,700}$/.test(k.n)&&k.e==='AQAB'&&!k.d,'공개키 설정이 잘못되었습니다.');
+ return {format:c.format,vaultId:c.vaultId,publicJwk:{kty:k.kty,n:k.n,e:k.e},session:textField(c.session,60,'검사 회차'),grade:textField(c.grade,40,'학년·반')};
+}
+function render(){
+ view('test');$('pageHeading').textContent=(page*5+1)+'~'+(page*5+5)+'번에 답해 주세요. ('+(page+1)+'/5)';
+ $('questions').replaceChildren();
+ for(let i=page*5;i<page*5+5;i++){
+  const fs=node('fieldset');fs.id='question'+i;fs.append(node('legend',(i+1)+'. '+QUESTIONS[i]));
+  const choices=node('div',undefined,'choices');
+  LABELS.forEach((text,j)=>{
+   const label=node('label');const radio=node('input');radio.type='radio';radio.name='q'+i;radio.value=j+1;radio.checked=answers[i]===j+1;
+   radio.addEventListener('change',()=>{answers[i]=j+1;progress();});label.append(radio,document.createTextNode(' '+text));choices.append(label);
+  });fs.append(choices);$('questions').append(fs);
+ }
+ $('prev').disabled=page===0;$('next').textContent=page===4?'응답 파일을 저장합니다':'다음으로 갑니다';progress();$('pageHeading').focus();
+}
+function progress(){const n=answers.filter(x=>x!==null).length;$('progress').value=n;$('progressText').textContent='25문항 중 '+n+'문항에 응답했습니다.';}
+function clear(){answers=Array(25).fill(null);identity=null;pending=null;pendingName='';page=0;$('infoForm').reset();$('questions').replaceChildren();}
+$('configFile').addEventListener('change',async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{
+  must(f.size>0&&f.size<16000,'16KB 미만의 검사 설정 파일을 선택해 주세요.');
+  const next=validConfig(JSON.parse(await f.text()));const key=await publicOf(next);config=next;pub=key;clear();
+  $('context').textContent=config.session+' / '+config.grade;view('intro');
+ }catch(e){message('설정을 열지 못했습니다. '+e.message);}
+});
+$('changeSetup').addEventListener('click',()=>{clear();config=null;pub=null;view('setup');});
+$('infoForm').addEventListener('submit',e=>{
+ e.preventDefault();try{
+  must(config&&pub,'검사 설정을 먼저 열어 주세요.');
+  const num=Number($('num').value);must(Number.isInteger(num)&&num>=1&&num<=9999,'번호를 확인해 주세요.');
+  identity={num,name:textField($('name').value,60,'이름 또는 코드')};page=0;render();
+ }catch(e){message(e.message);}
+});
+$('prev').addEventListener('click',()=>{if(!working&&page>0){page--;render();}});
+$('testForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(working)return;
+ const missing=answers.findIndex((v,i)=>i>=page*5&&i<page*5+5&&v===null);
+ if(missing>=0){message((missing+1)+'번 문항에 응답해 주세요.');$('question'+missing).querySelector('input').focus();return;}
+ if(page<4){page++;render();return;}
+ working=true;for(const id of ['next','prev','cancel'])$(id).disabled=true;
+ try{
+  must(answers.every(x=>Number.isInteger(x)&&x>=1&&x<=4),'빠뜨린 문항을 확인해 주세요.');
+  const d=validRecord({id:crypto.randomUUID(),session:config.session,grade:config.grade,...identity,createdAt:new Date().toISOString(),answers});
+  const entry=await encryptRecord(d,config,pub);
+  pending=JSON.stringify({format:'selfesteem-student-response-v1',vaultId:config.vaultId,entries:[entry]});
+  pendingName='selfesteem_response_'+d.id+'.json';
+  download(pending,pendingName,'application/json');
+  answers=Array(25).fill(null);identity=null;$('infoForm').reset();$('questions').replaceChildren();
+  $('filename').textContent='저장 파일 이름: '+pendingName;view('done');
+ }catch(e){message('파일 저장 요청을 완료하지 못했습니다. 입력 내용은 유지됩니다. '+e.message);}
+ finally{working=false;for(const id of ['next','prev','cancel'])$(id).disabled=false;}
+});
+$('saveAgain').addEventListener('click',()=>{if(pending)download(pending,pendingName,'application/json');});
+$('nextStudent').addEventListener('click',()=>{if(confirm('응답 파일을 저장하고 전달했나요? 다음 학생으로 넘어가면 여기서 다시 저장할 수 없습니다.')){clear();view('intro');}});
+$('cancel').addEventListener('click',()=>{if(!working&&confirm('입력한 정보와 응답을 지우고 중단할까요?')){clear();view('intro');}});
+window.addEventListener('beforeunload',e=>{if(working||identity||pending){e.preventDefault();e.returnValue='';}});
+try{must(window.isSecureContext&&crypto.subtle&&crypto.randomUUID,'최신 Chrome 또는 Edge에서 파일을 열어 주세요. 이 환경에서는 안전하게 응답을 저장할 수 없습니다.');}
+catch(e){$('configFile').disabled=true;message(e.message);}
+})();
+</script></body></html>

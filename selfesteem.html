@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자아존중감 검사</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1, h2, h3, h4 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { font-weight: bold; }
+        .form-group input { width: 100px; padding: 8px; margin-right: 10px; }
+        .question { background: #fafafa; padding: 15px; margin-bottom: 10px; border-left: 4px solid #4CAF50; }
+        .options label { margin-right: 15px; cursor: pointer; display: inline-block; margin-top: 5px; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; margin-right: 5px; }
+        button:hover { background: #45a049; }
+        .btn-blue { background: #2196F3; } .btn-blue:hover { background: #1976D2; }
+        .btn-dark { background: #333; } .btn-dark:hover { background: #222; }
+        
+        .hidden { display: none !important; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #4CAF50; color: white; }
+        
+        .stats-box { background: #e8f5e9; padding: 15px; border-radius: 5px; margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: space-between; }
+        .stat-item { width: 48%; margin-bottom: 10px; font-size: 14px; }
+        
+        .data-management { background:#e3f2fd; padding:15px; border-radius:5px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 15px; font-size: 13px; text-align: left; }
+        .answer-item { background: #f9f9f9; padding: 10px; border-radius: 4px; border-left: 3px solid #2196F3; line-height: 1.4; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; margin: 0; }
+            .no-print { display: none !important; }
+            body.print-teacher #student-view, body.print-teacher #student-detail, body.print-teacher #student-own-result { display: none !important; }
+            body.print-student #student-view, body.print-student #teacher-view, body.print-student #student-own-result { display: none !important; }
+            body.print-student #student-detail { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 1. 학생용 검사 화면 -->
+<div class="container" id="student-view">
+    <h1>자아존중감 검사</h1>
+    <p style="text-align:center;">♣ 다음 문항은 자아 긍정도에 관한 질문입니다. 평상시에 느낀 대로 해당란에 체크 하십시오.</p>
+    
+    <div class="form-group no-print" style="text-align:center; margin-top:20px;">
+        <label>학년/반:</label> <input type="text" id="student-grade" placeholder="예: 3-2">
+        <label>번호:</label> <input type="number" id="student-num" placeholder="예: 15">
+        <label>이름:</label> <input type="text" id="student-name" placeholder="이름">
+    </div>
+
+    <div id="questions-container" class="no-print"></div>
+    <button onclick="submitTest()" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 10px;" class="no-print">검사 제출하기</button>
+    <button class="btn-dark no-print" onclick="toggleView('teacher')" style="margin-top: 20px; float: right;">교사용 결과 보기</button>
+    <div style="clear:both;"></div>
+</div>
+
+<!-- 2. 학생 제출 완료 화면 (학생 본인은 점수를 보지 못하게 수정됨) -->
+<div class="container hidden" id="student-own-result">
+    <div id="own-result-content" style="padding: 40px 20px; text-align: center;">
+        <!-- 완료 메시지 렌더링 영역 -->
+    </div>
+    <button onclick="resetForNextStudent()" class="btn-blue no-print" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 25px;">다음 학생 검사 시작하기</button>
+</div>
+
+<!-- 3. 교사용 학급 전체 화면 -->
+<div class="container hidden" id="teacher-view">
+    <h2 id="class-title">학급 및 통합 검사 결과</h2>
+    
+    <div class="data-management no-print">
+        <strong>데이터 병합 및 관리:</strong>
+        <button onclick="exportJSON()" class="btn-blue">현재 결과 내보내기 (.json)</button>
+        <div style="border-left: 2px solid #ccc; padding-left: 15px;">
+            <label for="file-input" style="cursor:pointer; font-weight:bold; margin-right:5px;">다른 반 데이터 불러오기:</label>
+            <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
+        </div>
+    </div>
+
+    <div class="no-print" style="margin-bottom: 15px;">
+        <button onclick="sortResults('num')">번호순 정렬</button>
+        <button onclick="sortResults('name')" class="btn-blue">이름순 정렬</button>
+        <button onclick="printClass()" class="btn-dark" style="float: right;">전체 목록 인쇄</button>
+        <button class="btn-dark" onclick="toggleView('student')" style="float: right; margin-right: 5px;">학생 화면으로 이동</button>
+    </div>
+    
+    <div class="stats-box" id="class-stats">
+        <!-- 통계 데이터 렌더링 영역 -->
+    </div>
+
+    <table id="result-table">
+        <thead>
+            <tr>
+                <th>학년/반</th><th>번호</th><th>이름</th><th>총점</th>
+                <th>자기비하</th><th>타인관계</th><th>지도력/인기</th><th>주장/불안</th>
+                <th class="no-print">상세 확인</th>
+            </tr>
+        </thead>
+        <tbody id="result-body"></tbody>
+    </table>
+</div>
+
+<!-- 4. 교사용 개인별 상세 확인 및 인쇄 화면 -->
+<div class="container hidden" id="student-detail">
+    <h2>개인별 자아존중감 분석 결과지</h2>
+    <div class="no-print" style="margin-bottom: 15px; text-align: right;">
+        <button onclick="window.print()" class="btn-dark">이 화면 인쇄</button>
+        <button onclick="toggleView('teacher')" class="btn-blue">교사 목록으로 돌아가기</button>
+    </div>
+    <div id="detail-content" style="font-size: 16px; line-height: 1.8;">
+        <!-- 개인 상세 데이터 렌더링 영역 -->
+    </div>
+</div>
+
+<script>
+    const questionsText = [
+        "나는 가끔 내가 다른 사람이었으면 하고 바란다.", "나는 여러 사람 앞에서 이야기하기가 어렵다.",
+        "나에게는 고쳐야 할 점이 많다.", "나는 어렵지 않게 마음을 결정할 수 있다.",
+        "나는 다른 사람들과 재미있게 지낸다.", "가족 중엔 나에게 관심을 보여주는 사람이 없다.",
+        "나는 새로운 것에 익숙해지기까지 많은 시간이 걸린다.", "나는 친구들에게 인기가 있다.",
+        "우리 가족은 나에게 너무 많은 기대를 한다.", "우리 가족은 대체로 내 기분을 이해해 주는 편이다.",
+        "나는 많은 경우에 쉽게 포기하는 편이다.", "나는 비교적 남보다 행복한 편이다.",
+        "나의 생활은 뒤죽박죽이다.", "대체로 다른 사람들이 내 생각을 따라주는 편이다.",
+        "나 자신에 대해 별로 내세울 것이 없다.", "나는 집을 나가 버리고 싶은 생각이 자주 든다.",
+        "종종 내가 하는 일이 뜻대로 되지 않는다.", "나는 외모가 그리 멋진 편이 못된다.",
+        "나는 할 말이 있을 때 대체로 그 말을 하는 편이다.", "우리 가족들이 나를 잘 이해하고 있다.",
+        "다른 사람들에 비해서 나는 별로 사랑받지 못한다.", "어떤 때는 가족들이 나를 미워하는 것 같다.",
+        "내가 하고 있는 일에 대해 실망을 느낄 때가 많다.", "나는 모든 것이 그다지 어렵게 생각되지는 않는다.",
+        "나는 다른 사람이 나에게 의지해도 될 만큼 강하지 못하다."
+    ];
+
+    const mapping = {
+        '자기비하': { pos: [], neg: [1, 3, 11, 15, 16], max: 20 },
+        '타인과의관계': { pos: [10, 20], neg: [6, 7, 9, 21, 22], max: 28 },
+        '지도력과인기': { pos: [5, 8, 14], neg: [2, 18, 25], max: 24 },
+        '자기주장과불안': { pos: [4, 12, 19, 24], neg: [13, 17, 23], max: 28 }
+    };
+
+    let resultsData = [];
+
+    window.onload = function() {
+        const container = document.getElementById('questions-container');
+        questionsText.forEach((text, i) => {
+            const qNum = i + 1;
+            const div = document.createElement('div');
+            div.className = 'question';
+            div.innerHTML = `
+                <p><strong>문항 ${qNum}.</strong> ${text}</p>
+                <div class="options">
+                    <label><input type="radio" name="q${qNum}" value="1"> 1. 전혀 그렇지 않다</label>
+                    <label><input type="radio" name="q${qNum}" value="2"> 2. 약간 그렇지 않다</label>
+                    <label><input type="radio" name="q${qNum}" value="3"> 3. 약간 그렇다</label>
+                    <label><input type="radio" name="q${qNum}" value="4"> 4. 아주 그렇다</label>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    };
+
+    function submitTest() {
+        const num = document.getElementById('student-num').value;
+        const name = document.getElementById('student-name').value;
+        const grade = document.getElementById('student-grade').value || "미입력";
+        
+        if(!num || !name) { alert("번호와 이름을 입력해주세요."); return; }
+
+        let scores = { '자기비하': 0, '타인과의관계': 0, '지도력과인기': 0, '자기주장과불안': 0, '총점': 0 };
+        let answers = []; 
+        
+        for (let i = 1; i <= 25; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (!selected) { alert(`${i}번 문항에 답하지 않았습니다.`); return; }
+            let rawScore = parseInt(selected.value);
+            answers.push(rawScore);
+            
+            for (let category in mapping) {
+                if (mapping[category].pos.includes(i)) {
+                    scores[category] += rawScore;
+                    scores['총점'] += rawScore;
+                } else if (mapping[category].neg.includes(i)) {
+                    let reversedScore = 5 - rawScore; 
+                    scores[category] += reversedScore;
+                    scores['총점'] += reversedScore;
+                }
+            }
+        }
+
+        let percentages = {};
+        for (let category in mapping) { percentages[category] = Math.round((scores[category] / mapping[category].max) * 100); }
+
+        const studentData = {
+            id: Date.now() + Math.floor(Math.random()*1000), 
+            num: parseInt(num), name: name, grade: grade, total: scores['총점'],
+            p1: percentages['자기비하'], p2: percentages['타인과의관계'], 
+            p3: percentages['지도력과인기'], p4: percentages['자기주장과불안'],
+            answers: answers 
+        };
+
+        resultsData.push(studentData);
+        alert("제출이 완료되었습니다."); 
+        
+        showOwnResult(studentData);
+        updateTeacherView();
+    }
+
+    function showOwnResult(d) {
+        // 학생 본인은 결과 점수를 보지 않고 제출 완료 메시지만 확인하도록 수정
+        const html = `
+            <h2 style="color:#4CAF50; margin-bottom: 20px;">완료해 주셔서 감사합니다.</h2>
+            <p style="font-size: 16px; color:#555;">${d.grade} ${d.num}번 ${d.name} 학생의 검사가 정상적으로 제출되었습니다.</p>
+        `;
+        document.getElementById('own-result-content').innerHTML = html;
+        
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('student-own-result').classList.remove('hidden');
+    }
+
+    function resetForNextStudent() {
+        document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
+        document.getElementById('student-num').value = '';
+        document.getElementById('student-name').value = '';
+        
+        document.getElementById('student-own-result').classList.add('hidden');
+        document.getElementById('student-view').classList.remove('hidden');
+        window.scrollTo(0, 0);
+    }
+
+    function calcStats(arr) {
+        if(arr.length === 0) return { mean: 0, std: 0 };
+        let mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+        let variance = arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length;
+        return { mean: mean.toFixed(1), std: Math.sqrt(variance).toFixed(1) };
+    }
+
+    function getTScore(val, arr) {
+        if(arr.length < 2) return 50; 
+        let mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+        let variance = arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length;
+        let std = Math.sqrt(variance);
+        if(std === 0) return 50;
+        let z = (val - mean) / std;
+        return Math.round(50 + (z * 10));
+    }
+
+    function updateTeacherView() {
+        const totals = resultsData.map(d => d.total);
+        const p1s = resultsData.map(d => d.p1);
+        const p2s = resultsData.map(d => d.p2);
+        const p3s = resultsData.map(d => d.p3);
+        const p4s = resultsData.map(d => d.p4);
+
+        const statHtml = `
+            <div style="width: 100%; margin-bottom: 10px;"><strong>현재 총 분석 인원 (모집단): ${resultsData.length}명</strong></div>
+            <div class="stat-item"><strong>총점:</strong> 평균 ${calcStats(totals).mean} (표준편차 ${calcStats(totals).std})</div>
+            <div class="stat-item"><strong>자기비하:</strong> 평균 ${calcStats(p1s).mean}% (표준편차 ${calcStats(p1s).std})</div>
+            <div class="stat-item"><strong>타인과의관계:</strong> 평균 ${calcStats(p2s).mean}% (표준편차 ${calcStats(p2s).std})</div>
+            <div class="stat-item"><strong>지도력과인기:</strong> 평균 ${calcStats(p3s).mean}% (표준편차 ${calcStats(p3s).std})</div>
+            <div class="stat-item"><strong>자기주장/불안:</strong> 평균 ${calcStats(p4s).mean}% (표준편차 ${calcStats(p4s).std})</div>
+        `;
+        document.getElementById('class-stats').innerHTML = statHtml;
+
+        const tbody = document.getElementById('result-body');
+        tbody.innerHTML = '';
+        resultsData.forEach(d => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${d.grade}</td><td>${d.num}</td><td>${d.name}</td><td><strong>${d.total}</strong></td>
+                    <td>${d.p1}%</td><td>${d.p2}%</td><td>${d.p3}%</td><td>${d.p4}%</td>
+                    <td class="no-print"><button class="btn-blue" onclick="viewStudent(${d.id})">상세분석</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function viewStudent(id) {
+        const d = resultsData.find(x => x.id === id);
+        if(!d) return;
+
+        const totals = resultsData.map(x => x.total);
+        const tScore = getTScore(d.total, totals);
+        
+        let relativePosText = "";
+        if (resultsData.length < 5) {
+            relativePosText = "<span style='color:gray;'>(모집단이 작아 상대적 위치 파악이 다소 부족합니다.)</span>";
+        } else {
+            if (tScore >= 65) relativePosText = "<span style='color:blue;'>최상위권 (자아존중감 매우 높음)</span>";
+            else if (tScore >= 55) relativePosText = "<span style='color:green;'>상위권</span>";
+            else if (tScore >= 45) relativePosText = "평균 수준";
+            else if (tScore >= 35) relativePosText = "<span style='color:orange;'>하위권 (관심 및 지지 필요)</span>";
+            else relativePosText = "<span style='color:red;'>최하위권 (심층 상담 권장)</span>";
+        }
+
+        let weak = [];
+        if(d.p1 < 50) weak.push("자기비하 방어");
+        if(d.p2 < 50) weak.push("교우/대인관계 개선");
+        if(d.p3 < 50) weak.push("자신감 향상");
+        if(d.p4 < 50) weak.push("자기주장 및 불안 감소");
+        
+        let aiAiText = weak.length > 0 
+            ? `현재 <strong>${weak.join(', ')}</strong> 영역에서 정서적 취약성이 엿보이므로 교사와 가정의 세심한 지지가 필요해 보입니다.`
+            : `모든 영역에서 비교적 긍정적인 수치를 보여 정서적 안정감이 관찰됩니다.`;
+
+        let answersHtml = '<div class="answer-grid">';
+        if(d.answers) {
+            d.answers.forEach((ans, i) => {
+                answersHtml += `<div class="answer-item"><strong>${i+1}번.</strong> ${questionsText[i]}<br><span style="color:#2196F3;">[학생 선택: ${ans}점]</span></div>`;
+            });
+        }
+        answersHtml += '</div>';
+
+        const html = `
+            <table style="width:80%; margin: 0 auto; margin-bottom: 20px;">
+                <tr><th style="background:#4CAF50;">학년/반</th><td>${d.grade}</td><th style="background:#4CAF50;">번호</th><td>${d.num}</td><th style="background:#4CAF50;">이름</th><td>${d.name}</td></tr>
+            </table>
+            <ul>
+                <li><strong>총점 (원점수):</strong> ${d.total}점 / 100점</li>
+                <li><strong>모집단 내 상대적 위치 (T점수):</strong> <strong>${tScore}점</strong> - ${relativePosText}</li>
+                <li style="list-style:none; color:gray; font-size:14px;">(현재 분석 모집단 총 ${resultsData.length}명 기준. 평균 50점, 표준편차 10점 적용)</li>
+                <hr style="margin: 15px 0;">
+                <li><strong>자기비하 긍정도:</strong> ${d.p1}%</li>
+                <li><strong>타인과의 관계 긍정도:</strong> ${d.p2}%</li>
+                <li><strong>지도력과 인기 긍정도:</strong> ${d.p3}%</li>
+                <li><strong>자기주장과 불안 긍정도:</strong> ${d.p4}%</li>
+            </ul>
+            <div style="background:#fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-top: 20px;">
+                <strong>💡 개별 분석 종합 소견 (상담 참고용):</strong><br>
+                ${aiAiText}
+            </div>
+            
+            <h4 style="margin-top: 30px; text-align: left;">학생 세부 문항 응답 내역</h4>
+            ${answersHtml}
+        `;
+        
+        document.getElementById('detail-content').innerHTML = html;
+        document.getElementById('teacher-view').classList.add('hidden');
+        document.getElementById('student-detail').classList.remove('hidden');
+        document.body.className = 'print-student'; 
+    }
+
+    function exportJSON() {
+        if(resultsData.length === 0) {
+            alert("내보낼 데이터가 없습니다.");
+            return;
+        }
+        const dataStr = JSON.stringify(resultsData);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        let linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', '학급_자아존중감_통합결과.json');
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+    }
+
+    function importJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (Array.isArray(importedData)) {
+                    resultsData = resultsData.concat(importedData);
+                    const uniqueIds = new Set();
+                    resultsData = resultsData.filter(d => {
+                        if(!uniqueIds.has(d.id)) {
+                            uniqueIds.add(d.id);
+                            return true;
+                        }
+                        return false;
+                    });
+                    alert("데이터 병합이 완료되었습니다! 현재 총 모집단: " + resultsData.length + "명");
+                    updateTeacherView();
+                } else {
+                    alert("지원하지 않는 형식입니다.");
+                }
+            } catch (err) {
+                alert("파일을 읽는 중 오류가 발생했습니다. 데이터가 손상되었거나 내용이 부정확하다 볼 수 있습니다.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; 
+    }
+
+    function sortResults(type) {
+        if(type === 'num') resultsData.sort((a, b) => a.num - b.num);
+        else if(type === 'name') resultsData.sort((a, b) => a.name.localeCompare(b.name));
+        updateTeacherView();
+    }
+
+    function toggleView(view) {
+        if(view === 'teacher') {
+            const pwd = prompt("교사용 결과 확인을 위한 비밀번호를 입력하세요. (기본: 0000)");
+            if(pwd !== "0000") {
+                alert("비밀번호가 일치하지 않습니다.");
+                return;
+            }
+            updateTeacherView();
+        }
+
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('student-own-result').classList.add('hidden');
+        document.getElementById('teacher-view').classList.add('hidden');
+        document.getElementById('student-detail').classList.add('hidden');
+        document.body.className = ''; 
+
+        if(view === 'student') document.getElementById('student-view').classList.remove('hidden');
+        else if(view === 'teacher') document.getElementById('teacher-view').classList.remove('hidden');
+    }
+
+    function printClass() {
+        document.body.className = 'print-teacher';
+        window.print();
+        document.body.className = '';
+    }
+</script>
+</body>
+</html>

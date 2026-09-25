@@ -1,524 +1,192 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자아존중감 검사</title>
-    <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h1, h2, h3, h4 { text-align: center; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { font-weight: bold; }
-        .form-group input { width: 100px; padding: 8px; margin-right: 10px; }
-        .question { background: #fafafa; padding: 15px; margin-bottom: 10px; border-left: 4px solid #4CAF50; }
-        .options label { margin-right: 15px; cursor: pointer; display: inline-block; margin-top: 5px; }
-        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; font-size: 14px; cursor: pointer; margin-right: 5px; margin-bottom: 5px; }
-        button:hover { background: #45a049; }
-        .btn-blue { background: #2196F3; } .btn-blue:hover { background: #1976D2; }
-        .btn-dark { background: #333; } .btn-dark:hover { background: #222; }
-        .btn-warn { background: #ff9800; } .btn-warn:hover { background: #e68a00; }
-        .btn-danger { background: #f44336; } .btn-danger:hover { background: #d32f2f; }
-        
-        .hidden { display: none !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background-color: #4CAF50; color: white; }
-        
-        .stats-box { background: #e8f5e9; padding: 15px; border-radius: 5px; margin-top: 15px; display: flex; flex-wrap: wrap; justify-content: space-between; }
-        .stat-item { width: 48%; margin-bottom: 10px; font-size: 14px; }
-        
-        .data-management { background:#e3f2fd; padding:15px; border-radius:5px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-        
-        .answer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 15px; font-size: 13px; text-align: left; }
-        .answer-item { background: #f9f9f9; padding: 10px; border-radius: 4px; border-left: 3px solid #2196F3; line-height: 1.4; }
-
-        @media print {
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; padding: 0; margin: 0; }
-            .no-print { display: none !important; }
-            body.print-teacher #student-view, body.print-teacher #student-detail, body.print-teacher #student-own-result { display: none !important; }
-            body.print-student #student-view, body.print-student #teacher-view, body.print-student #student-own-result { display: none !important; }
-            body.print-student #student-detail { display: block !important; }
-        }
-    </style>
-</head>
-<body>
-
-<!-- 1. 학생용 검사 화면 -->
-<div class="container" id="student-view">
-    <h1>자아존중감 검사</h1>
-    <p style="text-align:center;">♣ 다음 문항은 자아 긍정도에 관한 질문입니다. 평상시에 느낀 대로 해당란에 체크 하십시오.</p>
-    
-    <div class="form-group no-print" style="text-align:center; margin-top:20px;">
-        <label>학년/반:</label> <input type="text" id="student-grade" placeholder="예: 3-2">
-        <label>번호:</label> <input type="number" id="student-num" placeholder="예: 15">
-        <label>이름:</label> <input type="text" id="student-name" placeholder="이름">
-    </div>
-
-    <div id="questions-container" class="no-print"></div>
-    <button onclick="submitTest()" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 10px;" class="no-print">검사 제출하기</button>
-    <button class="btn-dark no-print" onclick="checkTeacherAccess()" style="margin-top: 20px; float: right;">교사용 결과 보기</button>
-    <div style="clear:both;"></div>
-</div>
-
-<!-- 2. 학생 제출 완료 화면 (학생 본인 점수 비공개) -->
-<div class="container hidden" id="student-own-result">
-    <div id="own-result-content" style="padding: 40px 20px; text-align: center;">
-        <!-- 완료 메시지 렌더링 영역 -->
-    </div>
-    <button onclick="resetForNextStudent()" class="btn-blue no-print" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 25px;">다음 학생 검사 시작하기</button>
-</div>
-
-<!-- 3. 교사용 학급 전체 화면 -->
-<div class="container hidden" id="teacher-view">
-    <h2 id="class-title">학급 및 통합 검사 결과</h2>
-    
-    <div class="data-management no-print">
-        <strong>데이터 관리 및 보안:</strong>
-        <button onclick="exportCSV()" class="btn-blue">엑셀(CSV) 다운로드</button>
-        <button onclick="exportJSON()" class="btn-dark">백업용 파일 내보내기 (.json)</button>
-        <button onclick="changePassword()" class="btn-warn">비밀번호 변경</button>
-        <button onclick="clearAllData()" class="btn-danger">모든 데이터 초기화</button>
-        <div style="border-left: 2px solid #ccc; padding-left: 15px; width: 100%; margin-top: 5px;">
-            <label for="file-input" style="cursor:pointer; font-weight:bold; margin-right:5px;">백업 파일(.json) 불러오기:</label>
-            <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
-        </div>
-    </div>
-
-    <div class="no-print" style="margin-bottom: 15px;">
-        <button onclick="sortResults('num')">번호순 정렬</button>
-        <button onclick="sortResults('name')" class="btn-blue">이름순 정렬</button>
-        <button onclick="printClass()" class="btn-dark" style="float: right;">전체 목록 인쇄</button>
-        <button class="btn-dark" onclick="toggleView('student')" style="float: right; margin-right: 5px;">학생 화면으로 이동</button>
-    </div>
-    
-    <div class="stats-box" id="class-stats">
-        <!-- 통계 데이터 렌더링 영역 -->
-    </div>
-
-    <table id="result-table">
-        <thead>
-            <tr>
-                <th>학년/반</th><th>번호</th><th>이름</th><th>총점</th>
-                <th>자기비하</th><th>타인관계</th><th>지도력/인기</th><th>주장/불안</th>
-                <th class="no-print">상세 확인</th>
-            </tr>
-        </thead>
-        <tbody id="result-body"></tbody>
-    </table>
-</div>
-
-<!-- 4. 교사용 개인별 상세 확인 및 인쇄 화면 -->
-<div class="container hidden" id="student-detail">
-    <h2>개인별 자아존중감 분석 결과지</h2>
-    <div class="no-print" style="margin-bottom: 15px; text-align: right;">
-        <button onclick="window.print()" class="btn-dark">이 화면 인쇄</button>
-        <button onclick="toggleView('teacher')" class="btn-blue">교사 목록으로 돌아가기</button>
-    </div>
-    <div id="detail-content" style="font-size: 16px; line-height: 1.8;">
-        <!-- 개인 상세 데이터 렌더링 영역 -->
-    </div>
-</div>
-
-<script>
-    const questionsText = [
-        "나는 가끔 내가 다른 사람이었으면 하고 바란다.", "나는 여러 사람 앞에서 이야기하기가 어렵다.",
-        "나에게는 고쳐야 할 점이 많다.", "나는 어렵지 않게 마음을 결정할 수 있다.",
-        "나는 다른 사람들과 재미있게 지낸다.", "가족 중엔 나에게 관심을 보여주는 사람이 없다.",
-        "나는 새로운 것에 익숙해지기까지 많은 시간이 걸린다.", "나는 친구들에게 인기가 있다.",
-        "우리 가족은 나에게 너무 많은 기대를 한다.", "우리 가족은 대체로 내 기분을 이해해 주는 편이다.",
-        "나는 많은 경우에 쉽게 포기하는 편이다.", "나는 비교적 남보다 행복한 편이다.",
-        "나의 생활은 뒤죽박죽이다.", "대체로 다른 사람들이 내 생각을 따라주는 편이다.",
-        "나 자신에 대해 별로 내세울 것이 없다.", "나는 집을 나가 버리고 싶은 생각이 자주 든다.",
-        "종종 내가 하는 일이 뜻대로 되지 않는다.", "나는 외모가 그리 멋진 편이 못된다.",
-        "나는 할 말이 있을 때 대체로 그 말을 하는 편이다.", "우리 가족들이 나를 잘 이해하고 있다.",
-        "다른 사람들에 비해서 나는 별로 사랑받지 못한다.", "어떤 때는 가족들이 나를 미워하는 것 같다.",
-        "내가 하고 있는 일에 대해 실망을 느낄 때가 많다.", "나는 모든 것이 그다지 어렵게 생각되지는 않는다.",
-        "나는 다른 사람이 나에게 의지해도 될 만큼 강하지 못하다."
-    ];
-
-    const mapping = {
-        '자기비하': { pos: [], neg: [1, 3, 11, 15, 16], max: 20 },
-        '타인과의관계': { pos: [10, 20], neg: [6, 7, 9, 21, 22], max: 28 },
-        '지도력과인기': { pos: [5, 8, 14], neg: [2, 18, 25], max: 24 },
-        '자기주장과불안': { pos: [4, 12, 19, 24], neg: [13, 17, 23], max: 28 }
-    };
-
-    let resultsData = [];
-    const STORAGE_KEY = 'self_esteem_results_data';
-
-    function loadSavedData() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                resultsData = JSON.parse(saved);
-            } catch (e) {
-                resultsData = [];
-            }
-        }
-    }
-
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(resultsData));
-    }
-
-    function getTeacherPassword() {
-        return localStorage.getItem('teacher_pwd') || "0000";
-    }
-
-    window.onload = function() {
-        loadSavedData();
-
-        const container = document.getElementById('questions-container');
-        questionsText.forEach((text, i) => {
-            const qNum = i + 1;
-            const div = document.createElement('div');
-            div.className = 'question';
-            div.innerHTML = `
-                <p><strong>문항 ${qNum}.</strong> ${text}</p>
-                <div class="options">
-                    <label><input type="radio" name="q${qNum}" value="1"> 1. 전혀 그렇지 않다</label>
-                    <label><input type="radio" name="q${qNum}" value="2"> 2. 약간 그렇지 않다</label>
-                    <label><input type="radio" name="q${qNum}" value="3"> 3. 약간 그렇다</label>
-                    <label><input type="radio" name="q${qNum}" value="4"> 4. 아주 그렇다</label>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    };
-
-    function submitTest() {
-        const num = document.getElementById('student-num').value;
-        const name = document.getElementById('student-name').value;
-        const grade = document.getElementById('student-grade').value || "미입력";
-        
-        if(!num || !name) { alert("번호와 이름을 입력해주세요."); return; }
-
-        let scores = { '자기비하': 0, '타인과의관계': 0, '지도력과인기': 0, '자기주장과불안': 0, '총점': 0 };
-        let answers = []; 
-        
-        for (let i = 1; i <= 25; i++) {
-            const selected = document.querySelector(`input[name="q${i}"]:checked`);
-            if (!selected) { alert(`${i}번 문항에 답하지 않았습니다.`); return; }
-            let rawScore = parseInt(selected.value);
-            answers.push(rawScore);
-            
-            for (let category in mapping) {
-                if (mapping[category].pos.includes(i)) {
-                    scores[category] += rawScore;
-                    scores['총점'] += rawScore;
-                } else if (mapping[category].neg.includes(i)) {
-                    let reversedScore = 5 - rawScore; 
-                    scores[category] += reversedScore;
-                    scores['총점'] += reversedScore;
-                }
-            }
-        }
-
-        let percentages = {};
-        for (let category in mapping) { percentages[category] = Math.round((scores[category] / mapping[category].max) * 100); }
-
-        const studentData = {
-            id: Date.now() + Math.floor(Math.random()*1000), 
-            num: parseInt(num), name: name, grade: grade, total: scores['총점'],
-            p1: percentages['자기비하'], p2: percentages['타인과의관계'], 
-            p3: percentages['지도력과인기'], p4: percentages['자기주장과불안'],
-            answers: answers 
-        };
-
-        resultsData.push(studentData);
-        saveData();
-        alert("제출이 완료되었습니다."); 
-        
-        showOwnResult(studentData);
-        updateTeacherView();
-    }
-
-    function showOwnResult(d) {
-        const html = `
-            <h2 style="color:#4CAF50; margin-bottom: 20px;">완료해 주셔서 감사합니다.</h2>
-            <p style="font-size: 16px; color:#555;">${d.grade} ${d.num}번 ${d.name} 학생의 검사가 정상적으로 제출되었습니다.</p>
-        `;
-        document.getElementById('own-result-content').innerHTML = html;
-        
-        document.getElementById('student-view').classList.add('hidden');
-        document.getElementById('student-own-result').classList.remove('hidden');
-    }
-
-    function resetForNextStudent() {
-        document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
-        document.getElementById('student-num').value = '';
-        document.getElementById('student-name').value = '';
-        
-        document.getElementById('student-own-result').classList.add('hidden');
-        document.getElementById('student-view').classList.remove('hidden');
-        window.scrollTo(0, 0);
-    }
-
-    function checkTeacherAccess() {
-        let currentPwd = getTeacherPassword();
-        let inputPwd = prompt("교사용 결과 확인을 위한 비밀번호를 입력하세요.\n(비밀번호를 잊으셨다면 '찾기' 또는 '초기화'를 입력하세요)");
-        
-        if (inputPwd === null) return; 
-
-        if (inputPwd === "찾기" || inputPwd === "초기화") {
-            let hintConfirm = confirm("비밀번호를 초기화(기본값: 0000) 하시겠습니까?\n[확인]을 누르면 초기화됩니다.");
-            if (hintConfirm) {
-                localStorage.removeItem('teacher_pwd');
-                alert("비밀번호가 기본값(0000)으로 초기화되었습니다. 다시 교사용 화면에 접속해 주세요.");
-            }
-            return;
-        }
-
-        if (inputPwd !== currentPwd) {
-            alert("비밀번호가 일치하지 않습니다. (비밀번호를 잊으셨다면 창에 '찾기'를 입력해보세요)");
-            return;
-        }
-
-        updateTeacherView();
-        toggleView('teacher');
-    }
-
-    function changePassword() {
-        let currentPwd = getTeacherPassword();
-        let oldInput = prompt("현재 비밀번호를 입력하세요:");
-        if (oldInput !== currentPwd) {
-            alert("현재 비밀번호가 일치하지 않습니다.");
-            return;
-        }
-        let newPwd = prompt("사용할 새 비밀번호를 입력하세요:");
-        if (newPwd && newPwd.trim() !== "") {
-            localStorage.setItem('teacher_pwd', newPwd.trim());
-            alert("교사용 비밀번호가 성공적으로 변경되었습니다.");
-        } else {
-            alert("올바른 비밀번호를 입력해주세요.");
-        }
-    }
-
-    function clearAllData() {
-        if (confirm("정말 모든 학생 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
-            resultsData = [];
-            localStorage.removeItem(STORAGE_KEY);
-            updateTeacherView();
-            alert("모든 데이터가 초기화되었습니다.");
-        }
-    }
-
-    function calcStats(arr) {
-        if(arr.length === 0) return { mean: 0, std: 0 };
-        let mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-        let variance = arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length;
-        return { mean: mean.toFixed(1), std: Math.sqrt(variance).toFixed(1) };
-    }
-
-    function getTScore(val, arr) {
-        if(arr.length < 2) return 50; 
-        let mean = arr.reduce((a, b) => a + b, 0) / arr.length;
-        let variance = arr.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / arr.length;
-        let std = Math.sqrt(variance);
-        if(std === 0) return 50;
-        let z = (val - mean) / std;
-        return Math.round(50 + (z * 10));
-    }
-
-    function updateTeacherView() {
-        const totals = resultsData.map(d => d.total);
-        const p1s = resultsData.map(d => d.p1);
-        const p2s = resultsData.map(d => d.p2);
-        const p3s = resultsData.map(d => d.p3);
-        const p4s = resultsData.map(d => d.p4);
-
-        const statHtml = `
-            <div style="width: 100%; margin-bottom: 10px;"><strong>현재 총 분석 인원 (모집단): ${resultsData.length}명</strong></div>
-            <div class="stat-item"><strong>총점:</strong> 평균 ${calcStats(totals).mean} (표준편차 ${calcStats(totals).std})</div>
-            <div class="stat-item"><strong>자기비하:</strong> 평균 ${calcStats(p1s).mean}% (표준편차 ${calcStats(p1s).std})</div>
-            <div class="stat-item"><strong>타인과의관계:</strong> 평균 ${calcStats(p2s).mean}% (표준편차 ${calcStats(p2s).std})</div>
-            <div class="stat-item"><strong>지도력과인기:</strong> 평균 ${calcStats(p3s).mean}% (표준편차 ${calcStats(p3s).std})</div>
-            <div class="stat-item"><strong>자기주장/불안:</strong> 평균 ${calcStats(p4s).mean}% (표준편차 ${calcStats(p4s).std})</div>
-        `;
-        document.getElementById('class-stats').innerHTML = statHtml;
-
-        const tbody = document.getElementById('result-body');
-        tbody.innerHTML = '';
-        resultsData.forEach(d => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${d.grade}</td><td>${d.num}</td><td>${d.name}</td><td><strong>${d.total}</strong></td>
-                    <td>${d.p1}%</td><td>${d.p2}%</td><td>${d.p3}%</td><td>${d.p4}%</td>
-                    <td class="no-print"><button class="btn-blue" onclick="viewStudent(${d.id})">상세분석</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    function viewStudent(id) {
-        const d = resultsData.find(x => x.id === id);
-        if(!d) return;
-
-        const totals = resultsData.map(x => x.total);
-        const tScore = getTScore(d.total, totals);
-        
-        let relativePosText = "";
-        if (resultsData.length < 5) {
-            relativePosText = "<span style='color:gray;'>(모집단이 작아 상대적 위치 파악이 다소 부족합니다.)</span>";
-        } else {
-            if (tScore >= 65) relativePosText = "<span style='color:blue;'>최상위권 (자아존중감 매우 높음)</span>";
-            else if (tScore >= 55) relativePosText = "<span style='color:green;'>상위권</span>";
-            else if (tScore >= 45) relativePosText = "평균 수준";
-            else if (tScore >= 35) relativePosText = "<span style='color:orange;'>하위권 (관심 및 지지 필요)</span>";
-            else relativePosText = "<span style='color:red;'>최하위권 (심층 상담 권장)</span>";
-        }
-
-        let weak = [];
-        if(d.p1 < 50) weak.push("자기비하 방어");
-        if(d.p2 < 50) weak.push("교우/대인관계 개선");
-        if(d.p3 < 50) weak.push("자신감 향상");
-        if(d.p4 < 50) weak.push("자기주장 및 불안 감소");
-        
-        let aiAiText = weak.length > 0 
-            ? `현재 <strong>${weak.join(', ')}</strong> 영역에서 정서적 취약성이 엿보이므로 교사와 가정의 세심한 지지가 필요해 보입니다.`
-            : `모든 영역에서 비교적 긍정적인 수치를 보여 정서적 안정감이 관찰됩니다.`;
-
-        let answersHtml = '<div class="answer-grid">';
-        if(d.answers) {
-            d.answers.forEach((ans, i) => {
-                // 교사 상세 화면의 문항 응답 표기를 "1점" 대신 "1번"으로 변경
-                answersHtml += `<div class="answer-item"><strong>${i+1}번.</strong> ${questionsText[i]}<br><span style="color:#2196F3;">[학생 선택: ${ans}번]</span></div>`;
-            });
-        }
-        answersHtml += '</div>';
-
-        const html = `
-            <table style="width:80%; margin: 0 auto; margin-bottom: 20px;">
-                <tr><th style="background:#4CAF50;">학년/반</th><td>${d.grade}</td><th style="background:#4CAF50;">번호</th><td>${d.num}</td><th style="background:#4CAF50;">이름</th><td>${d.name}</td></tr>
-            </table>
-            <ul>
-                <li><strong>총점 (원점수):</strong> ${d.total}점 / 100점</li>
-                <li><strong>모집단 내 상대적 위치 (T점수):</strong> <strong>${tScore}점</strong> - ${relativePosText}</li>
-                <li style="list-style:none; color:gray; font-size:14px;">(현재 분석 모집단 총 ${resultsData.length}명 기준. 평균 50점, 표준편차 10점 적용)</li>
-                <hr style="margin: 15px 0;">
-                <li><strong>자기비하 긍정도:</strong> ${d.p1}%</li>
-                <li><strong>타인과의 관계 긍정도:</strong> ${d.p2}%</li>
-                <li><strong>지도력과 인기 긍정도:</strong> ${d.p3}%</li>
-                <li><strong>자기주장과 불안 긍정도:</strong> ${d.p4}%</li>
-            </ul>
-            <div style="background:#fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-top: 20px;">
-                <strong>💡 개별 분석 종합 소견 (상담 참고용):</strong><br>
-                ${aiAiText}
-            </div>
-            
-            <h4 style="margin-top: 30px; text-align: left;">학생 세부 문항 응답 내역</h4>
-            ${answersHtml}
-        `;
-        
-        document.getElementById('detail-content').innerHTML = html;
-        document.getElementById('teacher-view').classList.add('hidden');
-        document.getElementById('student-detail').classList.remove('hidden');
-        document.body.className = 'print-student'; 
-    }
-
-    function exportCSV() {
-        if(resultsData.length === 0) {
-            alert("내보낼 데이터가 없습니다.");
-            return;
-        }
-
-        let csvContent = "\uFEFF"; 
-        csvContent += "학년/반,번호,이름,총점,자기비하(%),타인과의관계(%),지도력과인기(%),자기주장과불안(%)\r\n";
-
-        resultsData.forEach(d => {
-            let row = [
-                `"${d.grade}"`,
-                d.num,
-                `"${d.name}"`,
-                d.total,
-                d.p1,
-                d.p2,
-                d.p3,
-                d.p4
-            ];
-            csvContent += row.join(",") + "\r\n";
-        });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        let linkElement = document.createElement('a');
-        linkElement.setAttribute('href', url);
-        linkElement.setAttribute('download', '학급_자아존중감_통합결과.csv');
-        document.body.appendChild(linkElement);
-        linkElement.click();
-        document.body.removeChild(linkElement);
-    }
-
-    function exportJSON() {
-        if(resultsData.length === 0) {
-            alert("내보낼 데이터가 없습니다.");
-            return;
-        }
-        const dataStr = JSON.stringify(resultsData);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        let linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', '학급_자아존중감_백업.json');
-        document.body.appendChild(linkElement);
-        linkElement.click();
-        document.body.removeChild(linkElement);
-    }
-
-    function importJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                if (Array.isArray(importedData)) {
-                    resultsData = resultsData.concat(importedData);
-                    const uniqueIds = new Set();
-                    resultsData = resultsData.filter(d => {
-                        if(!uniqueIds.has(d.id)) {
-                            uniqueIds.add(d.id);
-                            return true;
-                        }
-                        return false;
-                    });
-                    saveData();
-                    alert("데이터 병합 및 저장 완료! 현재 총 모집단: " + resultsData.length + "명");
-                    updateTeacherView();
-                } else {
-                    alert("지원하지 않는 형식입니다.");
-                }
-            } catch (err) {
-                alert("파일을 읽는 중 오류가 발생했습니다.");
-            }
-        };
-        reader.readAsText(file);
-        event.target.value = ''; 
-    }
-
-    function sortResults(type) {
-        if(type === 'num') resultsData.sort((a, b) => a.num - b.num);
-        else if(type === 'name') resultsData.sort((a, b) => a.name.localeCompare(b.name));
-        updateTeacherView();
-    }
-
-    function toggleView(view) {
-        document.getElementById('student-view').classList.add('hidden');
-        document.getElementById('student-own-result').classList.add('hidden');
-        document.getElementById('teacher-view').classList.add('hidden');
-        document.getElementById('student-detail').classList.add('hidden');
-        document.body.className = ''; 
-
-        if(view === 'student') document.getElementById('student-view').classList.remove('hidden');
-        else if(view === 'teacher') document.getElementById('teacher-view').classList.remove('hidden');
-    }
-
-    function printClass() {
-        document.body.className = 'print-teacher';
-        window.print();
-        document.body.className = '';
-    }
-</script>
-</body>
-</html>
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>자아존중감 응답 도구 — 개선판</title>
+<style>
+:root{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f6f8;line-height:1.6}*{box-sizing:border-box}body{margin:0;padding:16px}main{max-width:1000px;margin:auto}section,.panel{background:white;border:1px solid #cbd5e1;border-radius:8px;padding:20px;margin:12px 0}h1{font-size:24px}h2{font-size:20px}h3{font-size:17px}button,input,select{font:inherit}button{background:#1d4ed8;color:white;border:1px solid #1d4ed8;border-radius:4px;padding:9px 14px;cursor:pointer;margin:4px 4px 4px 0}button.secondary{background:white;color:#172033;border-color:#94a3b8}button.danger{background:#b91c1c;border-color:#b91c1c}button:disabled{opacity:.55;cursor:wait}input:not([type=radio]):not([type=checkbox]),select{padding:8px;border:1px solid #64748b;border-radius:4px;max-width:100%;background:white;color:#172033}input[type=radio],input[type=checkbox]{width:20px;height:20px;vertical-align:middle}label{display:block;margin:6px 0}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:end}.row label{flex:1;min-width:150px}.row input{width:100%}fieldset{border:1px solid #cbd5e1;border-radius:4px;margin:18px 0;padding:12px}legend{font-weight:600;padding:0 5px}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.choices label{border:1px solid #cbd5e1;padding:9px;cursor:pointer;margin:0}.notice{border-left:4px solid #1d4ed8;background:#eff6ff;padding:12px}.warning{border-left:4px solid #b45309;background:#fffbeb;padding:12px}.small{font-size:13px;color:#475569}.hidden,[hidden]{display:none!important}#message{position:sticky;top:0;z-index:2;background:#fff;border:2px solid #b45309;padding:10px;white-space:pre-wrap}#message:empty{display:none}progress{width:100%;height:12px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}th{background:#f1f5f9}td.number{text-align:right}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:6px}#done{text-align:center}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:550px){body{padding:8px}section{padding:12px}.choices{grid-template-columns:1fr}}@media print{body{background:white;padding:0}header,#message,.no-print,section:not(#teacher):not(#detail){display:none!important}section{border:0;padding:0}table{font-size:11px}tr,fieldset{break-inside:avoid}.tablewrap{overflow:visible}button{display:none!important}}
+</style></head><body><main>
+<header><h1>자아존중감 응답 도구</h1><p class="small">25문항 · 로컬 암호화 저장 · 상담 참고용 개발판입니다.</p></header>
+<div id="message" role="alert" aria-live="assertive"></div>
+<section id="auth" hidden><h2 id="authTitle">교사용 잠금 해제</h2>
+<p class="warning">공용 기기에서는 교사가 준비하고 감독해 주세요. 이 파일은 정식 심리검사나 의료적 진단 도구가 아닙니다. 원척도·사용 허가·대상 연령·채점 기준은 별도 확인이 필요합니다.</p>
+<form id="authForm"><label for="password">교사용 암호를 입력해 주세요.</label><input id="password" type="password" minlength="12" maxlength="200" required autocomplete="current-password">
+<div id="confirmWrap" hidden><label for="password2">암호를 한 번 더 입력해 주세요.</label><input id="password2" type="password" maxlength="200" autocomplete="new-password"><p class="small">12자 이상의 긴 암호를 사용하세요. 암호를 잊으면 데이터 복구가 불가능합니다. 암호 자체는 저장하지 않습니다.</p></div>
+<button id="authSubmit" type="submit">잠금을 해제합니다</button><button id="authBack" type="button" class="secondary">학생 화면으로 돌아갑니다</button></form>
+<div class="panel no-print"><h3>암호화 백업을 복원합니다</h3><p class="small">개선판의 암호화 JSON 파일을 선택한 후, 해당 백업을 만들 때 사용한 암호로 잠금을 해제하세요. 복원 시 현재 데이터 전체가 교체됩니다. 기존 데이터를 먼저 백업하세요.</p><label for="restoreFile">개선판 백업 파일을 선택해 주세요.</label><input id="restoreFile" type="file" accept=".json,application/json"></div></section>
+<section id="student" hidden><h2>평소의 느낌에 맞게 답해 주세요.</h2>
+<p class="notice">정답은 없습니다. 답하기 어렵다면 중단하고 선생님에게 이야기해도 됩니다. 결과는 담당 교사가 상담 참고 목적으로 확인하며, 이 화면에는 점수가 표시되지 않습니다. 인터넷으로 전송하지 않고 현재 브라우저에 암호화하여 저장합니다. 자료의 열람자·보관 기간·삭제 요청 방법은 담당 교사에게 확인해 주세요.</p>
+<form id="testForm"><div class="row"><label>검사 회차를 입력해 주세요.<input id="session" maxlength="60" required placeholder="예: 2026-1학기"></label><label>학년·반을 입력해 주세요.<input id="grade" maxlength="40" required placeholder="예: 3-2"></label><label>번호를 입력해 주세요.<input id="num" type="number" min="1" max="9999" step="1" required></label><label>이름 또는 교사가 지정한 코드를 입력해 주세요.<input id="name" maxlength="60" required autocomplete="off"></label></div>
+<label><input id="ack" type="checkbox" required> 위 안내를 읽었으며 검사를 진행하겠습니다.</label><p class="small">이 확인은 학교의 개인정보 처리 절차나 필요한 보호자 동의를 대신하지 않습니다.</p>
+<p id="progressText" role="status">25문항 중 0문항에 응답했습니다.</p><progress id="progress" value="0" max="25" aria-label="문항 응답 진행률"></progress><div id="questions"></div>
+<button id="submitTest" type="submit">응답을 제출합니다</button><button id="cancelTest" type="button" class="secondary">입력 내용을 지웁니다</button></form><hr><button id="teacherOpen" class="secondary">교사용 잠금을 해제합니다</button></section>
+<section id="done" hidden><h2>응답이 저장되었습니다.</h2><p>참여해 주셔서 감사합니다. 이름과 점수는 이 화면에 표시하지 않습니다.</p><button id="nextStudent">다음 학생 검사를 시작합니다</button><button id="doneTeacher" class="secondary">교사용 잠금을 해제합니다</button></section>
+<section id="teacher" hidden><h2>교사용 응답 관리</h2><p class="warning">총점 범위는 25~100점입니다. 이 점수는 기존 파일의 채점 규칙을 적용한 참고값입니다. 전국 규준, 백분위, 진단, 상담 필요성 판정이 아닙니다. 하위영역의 명칭·구성 타당성도 검증되지 않았습니다. 서로 다른 학년·회차를 합쳐 해석하지 마세요.</p>
+<div class="toolbar no-print"><button id="lock">잠그고 학생 화면으로 이동합니다</button><button id="backup">암호화 백업을 저장합니다</button><button id="csv" class="secondary">현재 목록을 CSV로 저장합니다</button><button id="printClass" class="secondary">현재 목록을 인쇄합니다</button><button id="passwordChange" class="secondary">암호를 변경합니다</button><button id="deleteAll" class="danger">전체 응답을 삭제합니다</button></div>
+<p class="small no-print">5분 동안 조작이 없거나 다른 탭·앱으로 이동하면 잠깁니다. CSV와 인쇄물은 암호화되지 않습니다. CSV에는 개별 문항 응답을 포함하지 않습니다.</p>
+<div id="changeBox" class="panel no-print" hidden><form id="changeForm"><label>현재 암호를 입력해 주세요.<input id="oldPassword" type="password" required autocomplete="current-password"></label><label>새 암호를 입력해 주세요.<input id="newPassword" type="password" minlength="12" maxlength="200" required autocomplete="new-password"></label><label>새 암호를 다시 입력해 주세요.<input id="newPassword2" type="password" required autocomplete="new-password"></label><button type="submit">암호 변경을 저장합니다</button><button id="cancelChange" type="button" class="secondary">취소합니다</button></form></div>
+<div class="panel no-print"><h3>원본 프로그램의 백업을 가져옵니다</h3><p class="small">원본의 평문 JSON 배열만 지원합니다. 25개 응답이 있는 행만 허용하며 점수는 다시 계산합니다. 날짜 정보가 없어 가져오기 회차를 지정해야 합니다. 같은 ID와 내용은 건너뛰고, 같은 ID에 다른 내용이 있으면 전체 가져오기를 중단합니다.</p><label>가져올 자료의 검사 회차를 입력해 주세요.<input id="importSession" maxlength="60" placeholder="예: 2025-2학기"></label><label for="legacyFile">원본 JSON 백업을 선택해 주세요.</label><input id="legacyFile" type="file" accept=".json,application/json"><button id="clearLegacy" class="danger">원본 프로그램의 평문 저장값을 삭제합니다</button></div>
+<div class="row no-print"><label>검사 회차를 선택해 주세요.<select id="sessionFilter"></select></label><label>학년·반을 선택해 주세요.<select id="gradeFilter"></select></label></div><p id="stats"></p><p class="small">표준편차는 표시된 자료의 기술통계이며 n으로 나눕니다. 동일 회차·학년반·번호가 겹치는 응답은 중복 확인 대상으로 표시하지만, 자동으로 삭제하거나 통계에서 제외하지 않습니다.</p><div id="list" class="tablewrap"></div></section>
+<section id="detail" hidden><div class="no-print"><button id="detailBack" class="secondary">목록으로 돌아갑니다</button><button id="printDetail" class="secondary">이 응답만 인쇄합니다</button><button id="detailLock">잠급니다</button></div><div id="detailContent"></div></section>
+<section id="fatal" hidden><h2>데이터 보호를 위해 실행을 중단했습니다.</h2><p id="fatalText"></p><p>저장값은 자동 삭제하지 않습니다. 브라우저의 사이트 데이터를 지우지 말고 담당자에게 문의하세요. 이미 내려받은 백업은 보관해 주세요.</p></section>
+<footer class="small no-print"><p>이 프로그램은 별도 서버에 연결하지 않습니다. 암호화는 잠긴 상태의 저장 데이터 노출을 줄이지만, 악성 브라우저 확장·기기 관리자·개발자 도구·변조된 HTML로부터 완전한 보호를 제공하지는 않습니다. 실제 다수 학생 운영에는 서버 기반 인증·접근권한·감사기록과 개인정보 처리 체계가 필요합니다.</p></footer>
+</main><script>
+'use strict';
+(() => {
+const QUESTIONS = ["나는 가끔 내가 다른 사람이었으면 하고 바란다.", "나는 여러 사람 앞에서 이야기하기가 어렵다.", "나에게는 고쳐야 할 점이 많다.", "나는 어렵지 않게 마음을 결정할 수 있다.", "나는 다른 사람들과 재미있게 지낸다.", "가족 중엔 나에게 관심을 보여주는 사람이 없다.", "나는 새로운 것에 익숙해지기까지 많은 시간이 걸린다.", "나는 친구들에게 인기가 있다.", "우리 가족은 나에게 너무 많은 기대를 한다.", "우리 가족은 대체로 내 기분을 이해해 주는 편이다.", "나는 많은 경우에 쉽게 포기하는 편이다.", "나는 비교적 남보다 행복한 편이다.", "나의 생활은 뒤죽박죽이다.", "대체로 다른 사람들이 내 생각을 따라주는 편이다.", "나 자신에 대해 별로 내세울 것이 없다.", "나는 집을 나가 버리고 싶은 생각이 자주 든다.", "종종 내가 하는 일이 뜻대로 되지 않는다.", "나는 외모가 그리 멋진 편이 못된다.", "나는 할 말이 있을 때 대체로 그 말을 하는 편이다.", "우리 가족들이 나를 잘 이해하고 있다.", "다른 사람들에 비해서 나는 별로 사랑받지 못한다.", "어떤 때는 가족들이 나를 미워하는 것 같다.", "내가 하고 있는 일에 대해 실망을 느낄 때가 많다.", "나는 모든 것이 그다지 어렵게 생각되지는 않는다.", "나는 다른 사람이 나에게 의지해도 될 만큼 강하지 못하다."];
+const GROUPS = [
+ {name:'자기비하(역채점 후)',pos:[],neg:[1,3,11,15,16]},
+ {name:'타인과의 관계',pos:[10,20],neg:[6,7,9,21,22]},
+ {name:'지도력과 인기',pos:[5,8,14],neg:[2,18,25]},
+ {name:'자기주장과 불안',pos:[4,12,19,24],neg:[13,17,23]}
+];
+const LABELS=['전혀 그렇지 않다','약간 그렇지 않다','약간 그렇다','아주 그렇다'];
+const KEY='selfesteem_encrypted_v2', ITER=600000, MAX=2000, MAXFILE=8*1024*1024;
+const enc=new TextEncoder(),dec=new TextDecoder();
+let store=null,snapshot=null,publicKey=null,privateKey=null,records=[],teacher=false,epoch=0,lastActivity=0,busy=false,restore=null;
+const $=id=>document.getElementById(id);
+function node(tag,text,cls){const e=document.createElement(tag);if(text!==undefined)e.textContent=String(text);if(cls)e.className=cls;return e;}
+function message(s){$('message').textContent=s;}
+function screen(id){for(const s of ['auth','student','done','teacher','detail','fatal'])$(s).hidden=s!==id;message('');window.scrollTo(0,0);}
+function must(ok,msg){if(!ok)throw new Error(msg);}
+function textField(v,max,label){must(typeof v==='string',label+' 형식이 잘못되었습니다.');const s=v.trim();must(s.length>0&&s.length<=max&&!/[\u0000-\u001f\u007f]/.test(s),label+' 입력을 확인해 주세요.');return s;}
+function validRecord(d){
+ must(d&&typeof d==='object'&&!Array.isArray(d),'응답 객체 형식이 잘못되었습니다.');
+ must(typeof d.id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(d.id),'응답 ID가 잘못되었습니다.');
+ must(Number.isInteger(d.num)&&d.num>=1&&d.num<=9999,'번호는 1~9999의 정수여야 합니다.');
+ must(Array.isArray(d.answers)&&d.answers.length===25&&d.answers.every(x=>Number.isInteger(x)&&x>=1&&x<=4),'25개 응답은 각각 1~4의 정수여야 합니다.');
+ must(d.createdAt===null||(typeof d.createdAt==='string'&&d.createdAt.length<=30&&Number.isFinite(Date.parse(d.createdAt))),'검사 시각이 잘못되었습니다.');
+ return {id:d.id,session:textField(d.session,60,'검사 회차'),grade:textField(d.grade,40,'학년·반'),num:d.num,name:textField(d.name,60,'이름 또는 코드'),createdAt:d.createdAt,answers:[...d.answers]};
+}
+function score(answers){
+ must(Array.isArray(answers)&&answers.length===25&&answers.every(x=>Number.isInteger(x)&&x>=1&&x<=4),'채점할 응답이 잘못되었습니다.');
+ const groups=GROUPS.map(g=>{const n=g.pos.length+g.neg.length;const raw=g.pos.reduce((s,i)=>s+answers[i-1],0)+g.neg.reduce((s,i)=>s+5-answers[i-1],0);return {name:g.name,raw,min:n,max:4*n,converted:100*(raw-n)/(3*n)};});
+ return {total:groups.reduce((s,g)=>s+g.raw,0),groups};
+}
+function stats(values){if(!values.length)return null;const mean=values.reduce((a,b)=>a+b,0)/values.length;return {n:values.length,mean,sd:Math.sqrt(values.reduce((s,v)=>s+(v-mean)**2,0)/values.length)};}
+function csvCell(v){let s=String(v);if(/^[\s\uFEFF]*[=+@\-＝＋－＠]/u.test(s)||/^[\t\r\n]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+function b64(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes)));}
+function bytes(s){must(typeof s==='string'&&s.length>0&&s.length<=32000&&/^[A-Za-z0-9+/]*={0,2}$/.test(s),'암호화 데이터 형식이 잘못되었습니다.');return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+function random(n){return crypto.getRandomValues(new Uint8Array(n));}
+function validateStore(s){
+ must(s&&s.format==='selfesteem-v2'&&s.version===2,'개선판 백업 형식이 아닙니다.');
+ must(typeof s.vaultId==='string'&&/^[a-f0-9-]{36}$/.test(s.vaultId),'보관함 ID가 잘못되었습니다.');
+ must(s.kdf&&s.kdf.name==='PBKDF2-SHA256'&&s.kdf.iterations===ITER&&bytes(s.kdf.salt).length===16,'키 생성 설정이 잘못되었습니다.');
+ must(s.publicJwk&&s.publicJwk.kty==='RSA'&&typeof s.publicJwk.n==='string'&&s.publicJwk.n.length>=342&&s.publicJwk.n.length<=700&&s.publicJwk.e==='AQAB'&&!s.publicJwk.d,'공개키 형식이 잘못되었습니다.');
+ must(s.privateBox&&bytes(s.privateBox.iv).length===12&&bytes(s.privateBox.ct).length>=16,'잠금 정보가 잘못되었습니다.');
+ must(Array.isArray(s.entries)&&s.entries.length<=MAX,'최대 2,000개 응답만 지원합니다.');
+ const ids=new Set();for(const e of s.entries){must(e&&typeof e.id==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(e.id)&&!ids.has(e.id),'중복되거나 잘못된 응답 ID입니다.');ids.add(e.id);must(bytes(e.iv).length===12&&bytes(e.key).length>=256&&bytes(e.ct).length>=16,'암호화 응답이 잘못되었습니다.');}
+ return s;
+}
+async function derive(password,salt){const k=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes(salt),iterations:ITER,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function seal(key,plain,aad){const iv=random(12);return {iv:b64(iv),ct:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc.encode(aad)},key,plain))};}
+async function unseal(key,box,aad){return crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(box.iv),additionalData:enc.encode(aad)},key,bytes(box.ct));}
+async function makeStore(password){
+ const pair=await crypto.subtle.generateKey({name:'RSA-OAEP',modulusLength:3072,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['encrypt','decrypt']);
+ const vaultId=crypto.randomUUID(),salt=b64(random(16)),k=await derive(password,salt);
+ const jwk=await crypto.subtle.exportKey('jwk',pair.privateKey);
+ return {format:'selfesteem-v2',version:2,vaultId,kdf:{name:'PBKDF2-SHA256',iterations:ITER,salt},publicJwk:await crypto.subtle.exportKey('jwk',pair.publicKey),privateBox:await seal(k,enc.encode(JSON.stringify(jwk)),vaultId),entries:[]};
+}
+async function openPrivate(s,password){
+ const k=await derive(password,s.kdf.salt);const jwk=JSON.parse(dec.decode(await unseal(k,s.privateBox,s.vaultId)));
+ must(jwk.n===s.publicJwk.n&&jwk.e===s.publicJwk.e,'백업의 키가 일치하지 않습니다.');
+ return crypto.subtle.importKey('jwk',jwk,{name:'RSA-OAEP',hash:'SHA-256'},true,['decrypt']);
+}
+async function publicOf(s){return crypto.subtle.importKey('jwk',s.publicJwk,{name:'RSA-OAEP',hash:'SHA-256'},false,['encrypt']);}
+async function encryptRecord(d,s,pub){
+ d=validRecord(d);const aes=await crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+ const key=await crypto.subtle.encrypt({name:'RSA-OAEP'},pub,await crypto.subtle.exportKey('raw',aes));
+ return {id:d.id,key:b64(key),...await seal(aes,enc.encode(JSON.stringify(d)),s.vaultId+':'+d.id)};
+}
+async function decryptRecord(e,s,priv){
+ const key=await crypto.subtle.importKey('raw',await crypto.subtle.decrypt({name:'RSA-OAEP'},priv,bytes(e.key)),{name:'AES-GCM'},false,['decrypt']);
+ const d=validRecord(JSON.parse(dec.decode(await unseal(key,e,s.vaultId+':'+e.id))));must(d.id===e.id,'응답 ID가 일치하지 않습니다.');return d;
+}
+function commit(next){
+ validateStore(next);must(localStorage.getItem(KEY)===snapshot,'다른 탭에서 데이터가 바뀌었습니다. 덮어쓰지 않았습니다. 새로고침 후 확인해 주세요.');
+ const raw=JSON.stringify(next);try{localStorage.setItem(KEY,raw);}catch(e){throw new Error('저장에 실패했습니다. 저장공간·브라우저 설정을 확인하세요. 이번 변경은 완료되지 않았습니다.');}store=next;snapshot=raw;
+}
+function guard(){must(teacher&&privateKey,'먼저 교사용 잠금을 해제해 주세요.');}
+function current(token){guard();must(token===epoch,'잠금 상태가 변경되어 작업을 취소했습니다.');}
+async function task(fn){if(busy)return;busy=true;const buttons=[...document.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);message('처리 중입니다. 창을 닫거나 다른 탭으로 이동하지 마세요.');try{await fn();}catch(e){message(e.name==='OperationError'?'암호가 틀렸거나 암호화 자료가 손상되었습니다. 저장값은 변경하지 않았습니다.':e.message);}finally{busy=false;buttons.forEach(b=>b.disabled=false);}}
+function wipeTeacher(){teacher=false;privateKey=null;records=[];epoch++;for(const id of ['list','stats','detailContent'])$(id).replaceChildren();$('changeForm').reset();$('changeBox').hidden=true;$('password').value='';$('password2').value='';}
+function lock(){wipeTeacher();restore=null;resetForm();screen(store?'student':'auth');}
+function authScreen(){wipeTeacher();restore=null;screen('auth');const setup=!store;$('authTitle').textContent=setup?'교사용 암호를 처음 설정합니다':'교사용 잠금을 해제합니다';$('confirmWrap').hidden=!setup;$('password2').required=setup;$('authSubmit').textContent=setup?'암호화 보관함을 만듭니다':'잠금을 해제합니다';$('authBack').hidden=!store;$('password').focus();}
+function resetForm(){const s=$('session').value,g=$('grade').value;$('testForm').reset();$('session').value=s;$('grade').value=g;updateProgress();}
+function updateProgress(){const n=document.querySelectorAll('#questions input:checked').length;$('progress').value=n;$('progressText').textContent='25문항 중 '+n+'문항에 응답했습니다.';}
+function buildQuestions(){QUESTIONS.forEach((q,i)=>{const fs=node('fieldset');fs.append(node('legend',(i+1)+'. '+q));const choices=node('div',undefined,'choices');LABELS.forEach((label,j)=>{const l=node('label');const input=node('input');input.type='radio';input.name='q'+(i+1);input.value=j+1;input.required=true;l.append(input,document.createTextNode(' '+(j+1)+'. '+label));choices.append(l);});fs.append(choices);$('questions').append(fs);});}
+function fillFilter(id,values){const el=$(id),old=el.value;el.replaceChildren();const all=node('option','전체 자료');all.value='';el.append(all);for(const v of [...new Set(values)].sort((a,b)=>a.localeCompare(b,'ko'))){const o=node('option',v);o.value=v;el.append(o);}if(values.includes(old))el.value=old;}
+function filtered(){return records.filter(d=>(!$('sessionFilter').value||d.session===$('sessionFilter').value)&&(!$('gradeFilter').value||d.grade===$('gradeFilter').value)).sort((a,b)=>a.session.localeCompare(b.session,'ko')||a.grade.localeCompare(b.grade,'ko')||a.num-b.num||a.name.localeCompare(b.name,'ko'));}
+function identity(d){return JSON.stringify([d.session,d.grade,d.num]);}
+function table(headers,rows){const t=node('table'),head=node('thead'),tr=node('tr');headers.forEach(h=>{const th=node('th',h);th.scope='col';tr.append(th);});head.append(tr);t.append(head);const body=node('tbody');rows.forEach(row=>{const r=node('tr');row.forEach(value=>{const td=node('td');if(value instanceof Node)td.append(value);else td.textContent=String(value);if(typeof value==='number')td.className='number';r.append(td);});body.append(r);});t.append(body);return t;}
+function renderTeacher(refresh=true){
+ guard();if(refresh){fillFilter('sessionFilter',records.map(d=>d.session));fillFilter('gradeFilter',records.map(d=>d.grade));}screen('teacher');const data=filtered(),s=stats(data.map(d=>score(d.answers).total));
+ $('stats').textContent=s?`현재 ${s.n}건의 총점 평균은 ${s.mean.toFixed(1)}점이며, 표준편차는 ${s.sd.toFixed(1)}점입니다.`:'표시할 응답이 없습니다.';
+ const counts=new Map();records.forEach(d=>counts.set(identity(d),(counts.get(identity(d))||0)+1));
+ const rows=data.map(d=>{const action=node('div');const detail=node('button','응답을 봅니다');detail.addEventListener('click',()=>showDetail(d.id));const del=node('button','삭제합니다','danger');del.addEventListener('click',()=>task(async()=>{guard();if(!confirm(d.name+' 학생의 이 응답을 영구 삭제할까요?')){message('');return;}commit({...store,entries:store.entries.filter(e=>e.id!==d.id)});records=records.filter(r=>r.id!==d.id);renderTeacher(false);}));action.append(detail,del);return [d.session,d.grade,d.num,d.name,score(d.answers).total,counts.get(identity(d))>1?'중복 여부를 확인하세요.':'',action];});
+ $('list').replaceChildren(table(['검사 회차','학년·반','번호','이름/코드','총점(25~100)','확인 사항','관리'],rows));
+}
+function showDetail(id){guard();const d=records.find(r=>r.id===id);if(!d)return;screen('detail');const box=$('detailContent');box.replaceChildren();box.append(node('h2',d.name+' 학생의 응답'),node('p',`${d.session} / ${d.grade} / ${d.num}번`),node('p',d.createdAt?'저장 시각: '+new Date(d.createdAt).toLocaleString('ko-KR'):'원본 자료에 검사 시각이 없어 확인할 수 없습니다.'));
+ const s=score(d.answers);box.append(node('p',`총점은 ${s.total}점입니다. 가능한 범위는 25~100점입니다.`,'notice'));
+ box.append(table(['기존 하위영역','원점수','가능한 범위','범위 환산점수(0~100)'],s.groups.map(g=>[g.name,g.raw,`${g.min}~${g.max}`,g.converted.toFixed(1)])));
+ box.append(node('p','환산점수 = (원점수 − 가능한 최솟값) ÷ (가능한 최댓값 − 최솟값) × 100입니다. 백분위나 규준점수가 아니며, 높고 낮음에 따른 진단 기준을 뜻하지 않습니다. 모든 영역은 기존 역채점 규칙을 적용한 방향으로 표시합니다.','small'));
+ box.append(node('p','점수만으로 정서적 안정, 취약성 또는 상담 필요성을 판단하지 않습니다. 학생이 원할 때 최근 경험과 필요한 도움을 비판단적으로 확인하세요. 응답 내용은 다른 학생에게 공개하지 마세요.','warning'));
+ box.append(table(['문항','학생이 선택한 응답','채점값'],QUESTIONS.map((q,i)=>{const neg=GROUPS.some(g=>g.neg.includes(i+1));return [(i+1)+'. '+q,d.answers[i]+'. '+LABELS[d.answers[i]-1],neg?5-d.answers[i]:d.answers[i]]})));
+}
+function download(content,name,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=node('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);}
+async function readJSON(file){must(file&&file.size>0&&file.size<=MAXFILE,'8MB 이하의 JSON 파일을 선택해 주세요.');try{return JSON.parse(await file.text());}catch(e){throw new Error('JSON 파일을 읽을 수 없습니다. 파일 형식을 확인해 주세요.');}}
+function on(id,event,fn){$(id).addEventListener(event,fn);}
+async function initialize(){
+ try{
+ must(window.isSecureContext&&crypto.subtle&&crypto.randomUUID,'이 환경은 암호화 기능을 지원하지 않습니다. 최신 Chrome/Edge에서 로컬 HTML 파일을 열거나 HTTPS 환경을 사용하세요. 보안 기능 없이 실행하지 않습니다.');
+ buildQuestions();$('session').value=new Date().toISOString().slice(0,10);snapshot=localStorage.getItem(KEY);
+ if(snapshot!==null){store=validateStore(JSON.parse(snapshot));publicKey=await publicOf(store);screen('student');}else authScreen();
+ if(localStorage.getItem('self_esteem_results_data'))message('이 브라우저에 원본 프로그램의 평문 자료가 남아 있습니다. 교사가 원본에서 백업하고 개선판에 가져온 뒤 삭제해 주세요.');
+ }catch(e){screen('fatal');$('fatalText').textContent=e.message;return;}
+ on('authForm','submit',e=>{e.preventDefault();task(async()=>{
+ const password=$('password').value;const candidate=restore||store;const token=epoch;
+ must(password.length>=12&&password.length<=200,'암호는 12~200자로 입력해 주세요.');
+ if(!candidate)must(password===$('password2').value,'두 암호가 다릅니다.');
+ const target=candidate||await makeStore(password);const priv=await openPrivate(target,password);const pub=await publicOf(target);const loaded=[];
+ for(const entry of target.entries)loaded.push(await decryptRecord(entry,target,priv));
+ must(epoch===token,'잠금 화면이 변경되었습니다. 다시 시도해 주세요.');
+ if(restore&&store&&!confirm('현재 보관함 전체를 백업 자료로 교체할까요? 기존 보관함을 백업했는지 확인하세요.')){message('복원을 취소했습니다.');return;}
+ if(restore||!store)commit(target);
+ privateKey=priv;publicKey=pub;records=loaded;teacher=true;lastActivity=Date.now();restore=null;$('password').value='';$('password2').value='';resetForm();renderTeacher();
+ });});
+ on('authBack','click',()=>{restore=null;lock();});
+ on('restoreFile','change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;task(async()=>{restore=null;restore=validateStore(await readJSON(f));$('authTitle').textContent='백업을 만들 때 사용한 암호를 입력해 주세요.';$('confirmWrap').hidden=true;$('password2').required=false;$('authSubmit').textContent='암호를 확인하고 복원합니다';$('password').value='';message('백업을 선택했습니다. 아직 현재 데이터는 변경하지 않았습니다.');});});
+ on('testForm','submit',e=>{e.preventDefault();task(async()=>{
+ must(store&&publicKey,'보관함이 준비되지 않았습니다.');must(store.entries.length<MAX,'보관 한도 2,000건에 도달했습니다. 교사에게 알려 주세요.');
+ const answers=QUESTIONS.map((q,i)=>{const radio=document.querySelector('input[name="q'+(i+1)+'"]:checked');must(radio,(i+1)+'번 문항에 응답해 주세요.');return Number(radio.value);});
+ const d=validRecord({id:crypto.randomUUID(),session:$('session').value,grade:$('grade').value,num:Number($('num').value),name:$('name').value,createdAt:new Date().toISOString(),answers});
+ const entry=await encryptRecord(d,store,publicKey);commit({...store,entries:[...store.entries,entry]});resetForm();screen('done');
+ });});
+ on('questions','change',updateProgress);on('cancelTest','click',()=>{if(confirm('아직 제출하지 않은 입력을 지울까요?')){resetForm();message('입력 내용을 지웠습니다.');}});
+ for(const id of ['teacherOpen','doneTeacher'])on(id,'click',authScreen);
+ on('nextStudent','click',()=>{resetForm();screen('student');$('num').focus();});for(const id of ['lock','detailLock'])on(id,'click',lock);
+ on('sessionFilter','change',()=>renderTeacher(false));on('gradeFilter','change',()=>renderTeacher(false));on('detailBack','click',()=>renderTeacher(false));
+ for(const id of ['printClass','printDetail'])on(id,'click',()=>{guard();if(confirm('인쇄물은 암호화되지 않습니다. 다른 학생에게 노출되지 않도록 관리할까요?'))window.print();});
+ on('backup','click',()=>{guard();download(JSON.stringify(store),'selfesteem_encrypted_backup_'+new Date().toISOString().slice(0,10)+'.json','application/json');message('암호화 백업 다운로드를 요청했습니다. 다운로드 폴더를 확인하고 해당 암호를 별도로 안전하게 보관하세요.');});
+ on('csv','click',()=>{guard();const data=filtered();if(!data.length){message('내보낼 응답이 없습니다.');return;}if(!confirm('현재 목록의 이름/코드와 점수가 평문 CSV로 저장됩니다. 안전한 위치에 보관할까요?'))return;
+ const headers=['검사 회차','학년/반','번호','이름/코드','저장 시각','총점(25~100)',...GROUPS.map(g=>g.name+' 원점수')];const rows=data.map(d=>[d.session,d.grade,d.num,d.name,d.createdAt||'시각 미상',score(d.answers).total,...score(d.answers).groups.map(g=>g.raw)]);
+ download('﻿'+[headers,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n'),'selfesteem_results.csv','text/csv;charset=utf-8');message('평문 CSV 다운로드를 요청했습니다. 수식 방어를 적용했지만 다른 앱에서 재저장한 파일은 다시 확인하세요.');});
+ on('deleteAll','click',()=>task(async()=>{guard();if(!confirm('현재 보관함의 모든 응답을 삭제할까요? 내려받은 백업과 CSV는 따로 삭제해야 합니다.')){message('');return;}if(prompt('삭제하려면 전체삭제를 입력하세요.')!=='전체삭제'){message('삭제를 취소했습니다.');return;}commit({...store,entries:[]});records=[];renderTeacher();}));
+ on('passwordChange','click',()=>{guard();$('changeBox').hidden=false;$('oldPassword').focus();});on('cancelChange','click',()=>{$('changeForm').reset();$('changeBox').hidden=true;});
+ on('changeForm','submit',e=>{e.preventDefault();task(async()=>{guard();const token=epoch,pass=$('newPassword').value;must(pass.length>=12&&pass.length<=200&&pass===$('newPassword2').value,'새 암호의 길이와 일치 여부를 확인해 주세요.');const priv=await openPrivate(store,$('oldPassword').value);const salt=b64(random(16)),k=await derive(pass,salt),jwk=await crypto.subtle.exportKey('jwk',priv);const box=await seal(k,enc.encode(JSON.stringify(jwk)),store.vaultId);current(token);commit({...store,kdf:{name:'PBKDF2-SHA256',iterations:ITER,salt},privateBox:box});$('changeForm').reset();$('changeBox').hidden=true;message('암호를 변경했습니다. 새 암호화 백업을 받으세요. 이전 백업은 여전히 이전 암호로 열립니다.');});});
+ on('legacyFile','change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;task(async()=>{
+ guard();const token=epoch,session=textField($('importSession').value,60,'가져오기 회차'),input=await readJSON(f);current(token);must(Array.isArray(input)&&input.length>0&&input.length<=MAX,'원본의 비어 있지 않은 JSON 배열만 가져올 수 있습니다.');
+ const converted=input.map((d,i)=>{must(d&&((typeof d.id==='number'&&Number.isSafeInteger(d.id)&&d.id>=0)||(typeof d.id==='string'&&/^[A-Za-z0-9_-]{1,80}$/.test(d.id))),`${i+1}번째 행의 원본 ID가 잘못되었습니다.`);return validRecord({id:'legacy_'+d.id,session,grade:d.grade,num:d.num,name:d.name,createdAt:null,answers:d.answers});});
+ const known=new Map(records.map(d=>[d.id,d]));const added=[];let skipped=0;for(const d of converted){if(known.has(d.id)){must(JSON.stringify(known.get(d.id))===JSON.stringify(d),'동일 ID에 다른 내용이 있어 가져오기를 중단했습니다: '+d.id);skipped++;}else{known.set(d.id,d);added.push(d);}}
+ must(records.length+added.length<=MAX,'가져오기 후 2,000건을 초과합니다.');const entries=[];for(const d of added){current(token);entries.push(await encryptRecord(d,store,publicKey));}current(token);
+ commit({...store,entries:[...store.entries,...entries]});records.push(...added);renderTeacher();message(added.length+'건을 암호화하여 가져왔고, 동일한 '+skipped+'건은 건너뛰었습니다. 기존 total·p1~p4는 사용하지 않고 응답에서 다시 계산했습니다.');
+ });});
+ on('clearLegacy','click',()=>task(async()=>{guard();if(!confirm('원본 데이터의 개선판 이전과 백업을 확인했나요? 현재 브라우저·동일 저장 영역에 있는 원본 평문 응답과 비밀번호를 삭제합니다. 다른 위치의 사본은 삭제되지 않습니다.')){message('');return;}localStorage.removeItem('self_esteem_results_data');localStorage.removeItem('teacher_pwd');message('동일 저장 영역의 원본 키를 삭제했습니다. 원본 파일·다른 브라우저·평문 백업은 별도로 확인하세요.');}));
+ for(const type of ['pointerdown','keydown'])document.addEventListener(type,()=>{if(teacher)lastActivity=Date.now();},{passive:true});
+ setInterval(()=>{if(teacher&&Date.now()-lastActivity>300000){lock();message('5분 동안 조작이 없어 잠갔습니다.');}},10000);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){if(teacher){lock();}else if(!$('auth').hidden){epoch++;$('password').value='';$('password2').value='';}}});
+ window.addEventListener('storage',e=>{if(e.key===KEY||e.key===null){wipeTeacher();screen('fatal');$('fatalText').textContent='다른 탭에서 저장 데이터가 변경되었습니다. 이 탭에서는 더 이상 저장하지 않습니다. 새로고침하여 최신 자료를 읽어 주세요.';}});
+ window.addEventListener('beforeunload',e=>{if(busy||document.querySelector('#questions input:checked')){e.preventDefault();e.returnValue='';}});
+}
+initialize();
+})();
+</script></body></html>
